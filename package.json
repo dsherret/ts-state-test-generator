@@ -1,0 +1,49 @@
+{
+  "name": "ts-state-test-generator",
+  "version": "0.1.0",
+  "description": "Base project for typescript libraries",
+  "main": "dist/main.js",
+  "typings": "ts-state-test-generator.d.ts",
+  "scripts": {
+    "test": "gulp test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "build": "gulp typescript",
+    "pre-publish": "gulp tslint && gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dsherret/ts-state-test-generator.git"
+  },
+  "keywords": [
+    "typescript",
+    "code"
+  ],
+  "author": "David Sherret",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dsherret/ts-state-test-generator/issues"
+  },
+  "homepage": "https://github.com/dsherret/ts-state-test-generator#readme",
+  "typescript": {
+    "definition": "ts-state-test-generator.d.ts"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/mocha": "^2.2.33",
+    "@types/node": "^6.0.48",
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.6",
+    "del": "^2.0.2",
+    "gulp": "^3.9.1",
+    "gulp-istanbul": "^0.10.3",
+    "gulp-mocha": "^2.2.0",
+    "gulp-replace": "^0.5.4",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-tslint": "^5.0.0",
+    "gulp-typescript": "^2.13.3",
+    "mocha": "^2.3.3",
+    "ts-nameof": "^0.7.0",
+    "ts-type-info": "^6.2.1",
+    "tslint": "^3.13.0",
+    "typescript": "^2.1.4"
+  }
+}
