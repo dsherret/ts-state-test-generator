@@ -4,7 +4,7 @@ import {expect} from "chai";
 
 describe(nameof(TestGenerator), () => {
     describe("getting structures", () => {
-        const interfaceInfo = typeInfo.createInterface({
+        const myInterfaceDef = typeInfo.createInterface({
             name: "MyInterface",
             properties: [{
                 name: "prop1",
@@ -18,57 +18,99 @@ describe(nameof(TestGenerator), () => {
                 type: "MyClass"
             }, {
                 name: "prop4",
-                type: "MyInterface"
+                type: "(MyInterface | MyClass) & MyInterfaceToTransform"
+            }, {
+                name: "prop5",
+                type: "MyInterfaceToTransform"
             }]
         });
 
-        interfaceInfo.getProperty("prop3")!.type.definitions.push(typeInfo.createClass({
+        const myClassDef = typeInfo.createClass({
             name: "MyClass",
             properties: [{ name: "prop", type: "string" }]
-        }));
-        interfaceInfo.getProperty("prop4")!.type.definitions.push(interfaceInfo);
+        });
+        const myInterfaceToTransform = typeInfo.createInterface({
+            name: "MyInterfaceToTransform",
+            properties: [{ name: "prop", type: "number" }]
+        });
+        // prop3 - class definition
+        const prop3 = myInterfaceDef.getProperty("prop3")!;
+        prop3.type.definitions.push(myClassDef);
+        // prop4 - union and intersection type
+        const prop4 = myInterfaceDef.getProperty("prop4")!;
+        const prop4IntersectionType1 = new typeInfo.TypeDefinition();
+        const prop4IntersectionType1UnionType1 = new typeInfo.TypeDefinition();
+        prop4IntersectionType1UnionType1.text = "MyInterface";
+        prop4IntersectionType1UnionType1.definitions.push(myInterfaceDef);
+        prop4IntersectionType1.unionTypes.push(prop4IntersectionType1UnionType1);
+        const prop4IntersectionType1UnionType2 = new typeInfo.TypeDefinition();
+        prop4IntersectionType1UnionType2.text = "MyClass";
+        prop4IntersectionType1UnionType2.definitions.push(myClassDef);
+        prop4IntersectionType1.unionTypes.push(prop4IntersectionType1UnionType2);
+        const prop4IntersectionType2 = new typeInfo.TypeDefinition();
+        prop4IntersectionType2.text = "MyInterfaceToTransform";
+        prop4IntersectionType2.definitions.push(myInterfaceToTransform);
+        prop4.type.intersectionTypes.push(prop4IntersectionType1, prop4IntersectionType2);
+        // prop5 - type transformation
+        const prop5 = myInterfaceDef.getProperty("prop5")!;
+        prop5.type.definitions.push(myInterfaceToTransform);
 
         const generator = new TestGenerator({});
-        const structuresFile = generator.getTestStructures([interfaceInfo]);
+        generator.addTypeTransform(
+            typeDef => typeDef.text === "MyInterfaceToTransform",
+            newTypeDef => newTypeDef.text = "string",
+            writer => writer.writeLine(`assert.strictEqual(actualProperty.text, expectedProperty);`));
+        const structuresFile = generator.getTestStructures([myInterfaceDef]);
 
-        function checkProperty(prop: typeInfo.InterfacePropertyDefinition, expected: { name: string; isOptional?: boolean; type: string; }) {
-            expect(prop.name).to.equal(expected.name);
-            expect(prop.isOptional).to.equal(expected.isOptional || false);
-            expect(prop.type.text).to.equal(expected.type);
-        }
-
-        it("should create the interface MyInterfaceTestStructure", () => {
-            const testStructure = structuresFile.getInterface("MyInterfaceTestStructure")!;
-            const prop1 = testStructure.getProperty("prop1")!;
-            checkProperty(prop1, {
-                name: "prop1",
-                type: "string"
+        it("should write out the file", () => {
+            const expectedCode =
+`class StateTestRunner {
+    runMyInterfaceTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
+        assert.strictEqual(actual.prop1, expected.prop1);
+        assert.strictEqual(actual.prop2, expected.prop2);
+        this.runMyClassTest(actual.prop3 as MyClass, expected.prop3);
+        assertAll(() => {
+            assertAny(() => {
+                this.runMyInterfaceTest(actual.prop4 as MyInterface, expected.prop4);
+            }, () => {
+                this.runMyClassTest(actual.prop4 as MyClass, expected.prop4);
             });
-            const prop2 = testStructure.getProperty("prop2")!;
-            checkProperty(prop2, {
-                name: "prop2",
-                isOptional: true,
-                type: "number"
-            });
-            const prop3 = testStructure.getProperty("prop3")!;
-            checkProperty(prop3, {
-                name: "prop3",
-                type: "MyClassTestStructure"
-            });
-            const prop4 = testStructure.getProperty("prop4")!;
-            checkProperty(prop4, {
-                name: "prop4",
-                type: "MyInterfaceTestStructure"
-            });
+        }, () => {
+            ((actualProperty, expectedProperty) =>{
+                assert.strictEqual(actualProperty.text, expectedProperty);
+            })(actual.prop4, expected.prop4);
         });
+        ((actualProperty, expectedProperty) =>{
+            assert.strictEqual(actualProperty.text, expectedProperty);
+        })(actual.prop5, expected.prop5);
+    }
 
-        it("should create the interface MyClassTestStructure", () => {
-            const testStructure = structuresFile.getInterface("MyClassTestStructure")!;
-            const prop = testStructure.getProperty("prop")!;
-            checkProperty(prop, {
-                name: "prop",
-                type: "string"
-            });
+    runMyClassTest(actual: MyClass, expected: MyClassTestStructure) {
+        assert.strictEqual(actual.prop, expected.prop);
+    }
+
+    runMyInterfaceToTransformTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
+        assert.strictEqual(actual.prop, expected.prop);
+    }
+}
+
+interface MyInterfaceTestStructure {
+    prop1: string;
+    prop2?: number;
+    prop3: MyClassTestStructure;
+    prop4: ((MyInterfaceTestStructure | MyClassTestStructure) & string);
+    prop5: string;
+}
+
+interface MyClassTestStructure {
+    prop: string;
+}
+
+interface MyInterfaceToTransformTestStructure {
+    prop: number;
+}
+`;
+            expect(structuresFile.write()).to.equal(expectedCode);
         });
     });
 });
