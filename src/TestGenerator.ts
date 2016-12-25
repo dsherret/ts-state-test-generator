@@ -33,18 +33,19 @@ export class TestGenerator {
         this.typeTransforms.push({ condition, typeTransform, testWrite });
     }
 
-    getTestStructures(structures: ClassOrInterfaceType[]) {
+    getTestFile(structures: ClassOrInterfaceType[]) {
         const data: Data = {
             structures: [...structures],
             testFile: typeInfo.createFile()
         };
         const stateTestRunnerClass = data.testFile.addClass({
-            name: "StateTestRunner"
+            name: "StateTestRunner",
+            isExported: true
         });
 
         for (let i = 0; i < data.structures.length; i++) {
             const structure = data.structures[i];
-            const testStructure = data.testFile.addInterface({ name: this.getChangedName(structure.name) });
+            const testStructure = data.testFile.addInterface({ name: this.getChangedName(structure.name), isExported: true });
             const structureProperties = structure.properties as ClassOrInterfacePropertyType[];
             const writer = new CodeBlockWriter();
             const testMethod = stateTestRunnerClass.addMethod({
@@ -68,20 +69,27 @@ export class TestGenerator {
                         data.structures.push(validTypeDef);
                 });
 
-                const newProp = testStructure.addProperty({
-                    name: prop.name,
-                    isOptional: prop.isOptional
-                });
-                newProp.type = this.getNewType(prop, writer);
+                this.createProperty(testStructure, prop, writer);
             });
 
-            const methodText = writer.toString();
             testMethod.onWriteFunctionBody = methodBodyWriter => {
-                methodBodyWriter.write(methodText);
+                methodBodyWriter.write(`describe("${structure.name}", () => `).inlineBlock(() => {
+                    methodBodyWriter.write(writer.toString());
+                }).write(");").newLine();
             };
         }
 
         return data.testFile;
+    }
+
+    private createProperty(testStructure: typeInfo.InterfaceDefinition, prop: ClassOrInterfacePropertyType, writer: CodeBlockWriter) {
+        writer.write(`it("should have the correct '${prop.name}' property.", () => `).inlineBlock(() => {
+            const newProp = testStructure.addProperty({
+                name: prop.name,
+                isOptional: prop.isOptional
+            });
+            newProp.type = this.getNewType(prop, writer);
+        }).write(");").newLine();
     }
 
     private getNewType(prop: ClassOrInterfacePropertyType, writer: CodeBlockWriter) {
@@ -95,7 +103,7 @@ export class TestGenerator {
                         typeTransform.testWrite(writer);
                         typeTransform.typeTransform(newTypeDef);
                     });
-                }).write(`)(actual.${prop.name}, expected.${prop.name});`);
+                }).write(`)(actual.${prop.name}, expected.${prop.name});`).newLine();
                 return newTypeDef;
             }
 
@@ -113,15 +121,10 @@ export class TestGenerator {
                 newTypeDef.text = `(${newTypeDef.unionTypes.map(t => t.text).join(" | ")})`;
             }
             else if (typeDef.intersectionTypes.length > 0) {
-                writer.write("assertAll(");
-                typeDef.intersectionTypes.forEach((subType, i) => {
-                    writer.conditionalWrite(i !== 0, ", ");
-                    writer.write("() => ").inlineBlock(() => {
-                        const newSubType = getNewTypeInternal(subType);
-                        newTypeDef.intersectionTypes.push(newSubType);
-                    });
+                typeDef.intersectionTypes.forEach(subType => {
+                    const newSubType = getNewTypeInternal(subType);
+                    newTypeDef.intersectionTypes.push(newSubType);
                 });
-                writer.write(");").newLine();
 
                 newTypeDef.text = `(${newTypeDef.intersectionTypes.map(t => t.text).join(" & ")})`;
             }

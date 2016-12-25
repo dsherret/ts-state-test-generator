@@ -60,41 +60,58 @@ describe(nameof(TestGenerator), () => {
             typeDef => typeDef.text === "MyInterfaceToTransform",
             newTypeDef => newTypeDef.text = "string",
             writer => writer.writeLine(`assert.strictEqual(actualProperty.text, expectedProperty);`));
-        const structuresFile = generator.getTestStructures([myInterfaceDef]);
+        const structuresFile = generator.getTestFile([myInterfaceDef]);
 
         it("should write out the file", () => {
             const expectedCode =
-`class StateTestRunner {
+`export class StateTestRunner {
     runMyInterfaceTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
-        assert.strictEqual(actual.prop1, expected.prop1);
-        assert.strictEqual(actual.prop2, expected.prop2);
-        this.runMyClassTest(actual.prop3 as MyClass, expected.prop3);
-        assertAll(() => {
-            assertAny(() => {
-                this.runMyInterfaceTest(actual.prop4 as MyInterface, expected.prop4);
-            }, () => {
-                this.runMyClassTest(actual.prop4 as MyClass, expected.prop4);
+        describe("MyInterface", () => {
+            it("should have the correct 'prop1' property.", () => {
+                assert.strictEqual(actual.prop1, expected.prop1);
             });
-        }, () => {
-            ((actualProperty, expectedProperty) =>{
-                assert.strictEqual(actualProperty.text, expectedProperty);
-            })(actual.prop4, expected.prop4);
+            it("should have the correct 'prop2' property.", () => {
+                assert.strictEqual(actual.prop2, expected.prop2);
+            });
+            it("should have the correct 'prop3' property.", () => {
+                this.runMyClassTest(actual.prop3 as MyClass, expected.prop3);
+            });
+            it("should have the correct 'prop4' property.", () => {
+                assertAny(() => {
+                    this.runMyInterfaceTest(actual.prop4 as MyInterface, expected.prop4);
+                }, () => {
+                    this.runMyClassTest(actual.prop4 as MyClass, expected.prop4);
+                });
+                ((actualProperty, expectedProperty) =>{
+                    assert.strictEqual(actualProperty.text, expectedProperty);
+                })(actual.prop4, expected.prop4);
+            });
+            it("should have the correct 'prop5' property.", () => {
+                ((actualProperty, expectedProperty) =>{
+                    assert.strictEqual(actualProperty.text, expectedProperty);
+                })(actual.prop5, expected.prop5);
+            });
         });
-        ((actualProperty, expectedProperty) =>{
-            assert.strictEqual(actualProperty.text, expectedProperty);
-        })(actual.prop5, expected.prop5);
     }
 
     runMyClassTest(actual: MyClass, expected: MyClassTestStructure) {
-        assert.strictEqual(actual.prop, expected.prop);
+        describe("MyClass", () => {
+            it("should have the correct 'prop' property.", () => {
+                assert.strictEqual(actual.prop, expected.prop);
+            });
+        });
     }
 
     runMyInterfaceToTransformTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
-        assert.strictEqual(actual.prop, expected.prop);
+        describe("MyInterfaceToTransform", () => {
+            it("should have the correct 'prop' property.", () => {
+                assert.strictEqual(actual.prop, expected.prop);
+            });
+        });
     }
 }
 
-interface MyInterfaceTestStructure {
+export interface MyInterfaceTestStructure {
     prop1: string;
     prop2?: number;
     prop3: MyClassTestStructure;
@@ -102,11 +119,11 @@ interface MyInterfaceTestStructure {
     prop5: string;
 }
 
-interface MyClassTestStructure {
+export interface MyClassTestStructure {
     prop: string;
 }
 
-interface MyInterfaceToTransformTestStructure {
+export interface MyInterfaceToTransformTestStructure {
     prop: number;
 }
 `;
