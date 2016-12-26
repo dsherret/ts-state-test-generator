@@ -57,8 +57,25 @@ export class StateTestRunnerGenerator {
                 this.createProperty(testStructure, prop, writer);
             });
 
+            const validExtendsDefinitions: typeInfo.ClassDefinition[] = [];
+            structure.extendsTypes.forEach(extendsType => {
+                validExtendsDefinitions.push(...extendsType.definitions.filter(extendsTypeDefinition =>
+                    extendsTypeDefinition instanceof typeInfo.ClassDefinition) as typeInfo.ClassDefinition[]);
+            });
+            if (validExtendsDefinitions.length > 0)
+                testStructure.addExtends(this.getChangedName(validExtendsDefinitions[0].name));
+            validExtendsDefinitions.forEach(validExtendsDef => {
+                if (structures.indexOf(validExtendsDef) === -1)
+                    structures.push(validExtendsDef);
+            });
+
             testMethod.onWriteFunctionBody = methodBodyWriter => {
                 methodBodyWriter.write(`this.assertions.describe("${structure.name}", () => `).inlineBlock(() => {
+                    validExtendsDefinitions.forEach(validExtendsDef => {
+                        methodBodyWriter.writeLine(`this.run${validExtendsDef.name}Test(` +
+                            `actual as any as ${validExtendsDef.name}, ` +
+                            `expected);`);
+                    });
                     methodBodyWriter.write(writer.toString());
                 }).write(");").newLine();
             };
