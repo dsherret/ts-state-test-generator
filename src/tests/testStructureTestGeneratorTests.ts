@@ -59,53 +59,126 @@ describe(nameof(TestGenerator), () => {
         generator.addTypeTransform(
             typeDef => typeDef.text === "MyInterfaceToTransform",
             newTypeDef => newTypeDef.text = "string",
-            writer => writer.writeLine(`assert.strictEqual(actualProperty.text, expectedProperty);`));
+            writer => writer.writeLine(`this.assertions.strictEqual(actualProperty.text, expectedProperty);`));
         const structuresFile = generator.getTestFile([myInterfaceDef]);
 
         it("should write out the file", () => {
             const expectedCode =
-`export class StateTestRunner {
+`import * as assert from "assert";
+
+export interface Assertions {
+    describe(description: string, spec: () => void): void;
+    it(expectation: string, assertion: () => void): void;
+    strictEqual(actual: any, expected: any): void;
+}
+
+class DefaultAssertions implements Assertions {
+    describe(description: string, spec: () => void) {
+        describe(description, spec);
+    }
+
+    it(expectation: string, assertion: () => void) {
+        it(expectation, assertion);
+    }
+
+    strictEqual(actual: any, expected: any) {
+        assert.strictEqual(actual, expected);
+    }
+}
+
+export class WrapperAssertions {
+    private assertAnyCount = 0;
+
+    constructor(private readonly assertions: Assertions) {
+    }
+
+    describe(description: string, spec: () => void) {
+        this.assertions.describe(description, spec);
+    }
+
+    it(expectation: string, assertion: () => void) {
+        if (this.assertAnyCount > 0) {
+            assertion();
+        }
+        else {
+            this.assertions.it(expectation, assertion);
+        }
+    }
+
+    strictEqual(actual: any, expected: any) {
+        this.assertions.strictEqual(actual, expected);
+    }
+
+    assertAny(...checks: (() => void)[]) {
+        this.assertAnyCount++;
+        let didOverallPass = false
+        for (const check of checks) {
+            let didPass = true;
+            try {
+                check();
+            } catch (err) {
+                didPass = false;
+            }
+            if (didPass) {
+                didOverallPass = true;
+                break;
+            }
+        }
+        if (!didOverallPass) {
+            throw new Error("Did not equal any of the union types.");
+        }
+        this.assertAnyCount--;
+    }
+}
+
+export class StateTestRunner {
+    private readonly assertions: WrapperAssertions;
+
+    constructor(assertions: Assertions) {
+        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+    }
+
     runMyInterfaceTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
-        describe("MyInterface", () => {
-            it("should have the correct 'prop1' property.", () => {
-                assert.strictEqual(actual.prop1, expected.prop1);
+        this.assertions.describe("MyInterface", () => {
+            this.assertions.it("should have the correct 'prop1' property.", () => {
+                this.assertions.strictEqual(actual.prop1, expected.prop1);
             });
-            it("should have the correct 'prop2' property.", () => {
-                assert.strictEqual(actual.prop2, expected.prop2);
+            this.assertions.it("should have the correct 'prop2' property.", () => {
+                this.assertions.strictEqual(actual.prop2, expected.prop2);
             });
-            it("should have the correct 'prop3' property.", () => {
-                this.runMyClassTest(actual.prop3 as MyClass, expected.prop3);
+            this.assertions.it("should have the correct 'prop3' property.", () => {
+                this.runMyClassTest(actual.prop3 as any as MyClass, expected.prop3 as any as MyClassTestStructure);
             });
-            it("should have the correct 'prop4' property.", () => {
-                assertAny(() => {
-                    this.runMyInterfaceTest(actual.prop4 as MyInterface, expected.prop4);
+            this.assertions.it("should have the correct 'prop4' property.", () => {
+                this.assertions.assertAny(() => {
+                    this.runMyInterfaceTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
                 }, () => {
-                    this.runMyClassTest(actual.prop4 as MyClass, expected.prop4);
+                    this.runMyClassTest(actual.prop4 as any as MyClass, expected.prop4 as any as MyClassTestStructure);
                 });
                 ((actualProperty, expectedProperty) =>{
-                    assert.strictEqual(actualProperty.text, expectedProperty);
+                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
                 })(actual.prop4, expected.prop4);
             });
-            it("should have the correct 'prop5' property.", () => {
+            this.assertions.it("should have the correct 'prop5' property.", () => {
                 ((actualProperty, expectedProperty) =>{
-                    assert.strictEqual(actualProperty.text, expectedProperty);
+                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
                 })(actual.prop5, expected.prop5);
             });
         });
     }
 
     runMyClassTest(actual: MyClass, expected: MyClassTestStructure) {
-        describe("MyClass", () => {
-            it("should have the correct 'prop' property.", () => {
-                assert.strictEqual(actual.prop, expected.prop);
+        this.assertions.describe("MyClass", () => {
+            this.assertions.it("should have the correct 'prop' property.", () => {
+                this.assertions.strictEqual(actual.prop, expected.prop);
             });
         });
     }
 
     runMyInterfaceToTransformTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
-        describe("MyInterfaceToTransform", () => {
-            it("should have the correct 'prop' property.", () => {
-                assert.strictEqual(actual.prop, expected.prop);
+        this.assertions.describe("MyInterfaceToTransform", () => {
+            this.assertions.it("should have the correct 'prop' property.", () => {
+                this.assertions.strictEqual(actual.prop, expected.prop);
             });
         });
     }
