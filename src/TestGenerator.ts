@@ -1,15 +1,17 @@
 ﻿import * as typeInfo from "ts-type-info";
 import CodeBlockWriter from "code-block-writer";
 import {AssertionsClassGenerator} from "./AssertionsClassGenerator";
-import {TypeTransform} from "./TypeTransform";
+import {TransformOptions} from "./TransformOptions";
 import {StateTestRunnerGenerator} from "./StateTestRunnerGenerator";
 
 export class TestGenerator {
     private readonly assertionsClassGenerator = new AssertionsClassGenerator();
+    private readonly transformOptions: TransformOptions;
     private readonly stateTestRunnerGenerator: StateTestRunnerGenerator;
 
     constructor(opts: { testStructurePrefix?: string; testStructureSuffix?: string; }) {
-        this.stateTestRunnerGenerator = new StateTestRunnerGenerator(opts);
+        this.transformOptions = new TransformOptions(opts);
+        this.stateTestRunnerGenerator = new StateTestRunnerGenerator(this.transformOptions);
     }
 
     addTypeTransform(
@@ -17,7 +19,7 @@ export class TestGenerator {
         typeTransform: (newTypeDef: typeInfo.TypeDefinition) => void,
         testWrite: (writer: CodeBlockWriter) => void
     ) {
-        this.stateTestRunnerGenerator.addTypeTransform({ condition, typeTransform, testWrite });
+        this.transformOptions.addTypeTransform({ condition, typeTransform, testWrite });
     }
 
     getTestFile(structures: (typeInfo.InterfaceDefinition | typeInfo.ClassDefinition)[]) {

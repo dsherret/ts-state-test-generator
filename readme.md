@@ -1,4 +1,4 @@
-﻿TSStateTestGenerator
+﻿TsStateTestGenerator
 ====================
 
 [![Build Status](https://travis-ci.org/dsherret/ts-state-test-generator.svg)](https://travis-ci.org/dsherret/ts-state-test-generator)
