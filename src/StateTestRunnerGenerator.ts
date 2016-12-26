@@ -87,7 +87,7 @@ export class StateTestRunnerGenerator {
     }
 
     private createProperty(testStructure: typeInfo.InterfaceDefinition, prop: ClassOrInterfacePropertyType, writer: CodeBlockWriter) {
-        writer.write(`this.assertions.it("should have the correct '${prop.name}' property.", () => `).inlineBlock(() => {
+        writer.write(`this.assertions.it("should have the correct '${prop.name}' property", () => `).inlineBlock(() => {
             const newProp = testStructure.addProperty({
                 name: prop.name,
                 isOptional: prop.isOptional
@@ -149,8 +149,21 @@ export class StateTestRunnerGenerator {
 
             return newTypeDef;
         };
+        const handleTopLevelType = () => {
+            let newTypeDef: typeInfo.TypeDefinition | undefined;
+            if (prop.isOptional && (prop.type.unionTypes.length > 0 || prop.type.definitions.length > 0)) {
+                writer.write("this.assertions.assertAny(() => ").inlineBlock(() => {
+                    writer.writeLine(`this.assertions.strictEqual(actual.${prop.name}, undefined);`);
+                }).write(", () => ").inlineBlock(() => {
+                    newTypeDef = getNewTypeInternal(prop.type);
+                }).write(");");
+            }
+            else
+                newTypeDef = getNewTypeInternal(prop.type);
+            return newTypeDef!;
+        };
 
-        return getNewTypeInternal(prop.type);
+        return handleTopLevelType();
     }
 
     private getChangedName(name: string) {

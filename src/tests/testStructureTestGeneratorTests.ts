@@ -22,6 +22,10 @@ describe(nameof(TestGenerator), () => {
             }, {
                 name: "prop5",
                 type: "MyInterfaceToTransform"
+            }, {
+                name: "propWithOptionalDefinition",
+                isOptional: true,
+                type: "MyClass"
             }]
         });
 
@@ -54,6 +58,9 @@ describe(nameof(TestGenerator), () => {
         // prop5 - type transformation
         const prop5 = myInterfaceDef.getProperty("prop5")!;
         prop5.type.definitions.push(myInterfaceToTransform);
+        // propWithOptionalDefinition
+        const propWithOptionalDefinition = myInterfaceDef.getProperty("propWithOptionalDefinition")!;
+        propWithOptionalDefinition.type.definitions.push(myClassDef);
 
         const generator = new TestGenerator({});
         generator.addTypeTransform(
@@ -140,16 +147,16 @@ export class StateTestRunner {
 
     runMyInterfaceTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
         this.assertions.describe("MyInterface", () => {
-            this.assertions.it("should have the correct 'prop1' property.", () => {
+            this.assertions.it("should have the correct 'prop1' property", () => {
                 this.assertions.strictEqual(actual.prop1, expected.prop1);
             });
-            this.assertions.it("should have the correct 'prop2' property.", () => {
+            this.assertions.it("should have the correct 'prop2' property", () => {
                 this.assertions.strictEqual(actual.prop2, expected.prop2);
             });
-            this.assertions.it("should have the correct 'prop3' property.", () => {
+            this.assertions.it("should have the correct 'prop3' property", () => {
                 this.runMyClassTest(actual.prop3 as any as MyClass, expected.prop3 as any as MyClassTestStructure);
             });
-            this.assertions.it("should have the correct 'prop4' property.", () => {
+            this.assertions.it("should have the correct 'prop4' property", () => {
                 this.assertions.assertAny(() => {
                     this.runMyInterfaceTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
                 }, () => {
@@ -159,17 +166,24 @@ export class StateTestRunner {
                     this.assertions.strictEqual(actualProperty.text, expectedProperty);
                 })(actual.prop4, expected.prop4);
             });
-            this.assertions.it("should have the correct 'prop5' property.", () => {
+            this.assertions.it("should have the correct 'prop5' property", () => {
                 ((actualProperty, expectedProperty) =>{
                     this.assertions.strictEqual(actualProperty.text, expectedProperty);
                 })(actual.prop5, expected.prop5);
+            });
+            this.assertions.it("should have the correct 'propWithOptionalDefinition' property", () => {
+                this.assertions.assertAny(() => {
+                    this.assertions.strictEqual(actual.propWithOptionalDefinition, undefined);
+                }, () => {
+                    this.runMyClassTest(actual.propWithOptionalDefinition as any as MyClass, expected.propWithOptionalDefinition as any as MyClassTestStructure);
+                });
             });
         });
     }
 
     runMyClassTest(actual: MyClass, expected: MyClassTestStructure) {
         this.assertions.describe("MyClass", () => {
-            this.assertions.it("should have the correct 'prop' property.", () => {
+            this.assertions.it("should have the correct 'prop' property", () => {
                 this.assertions.strictEqual(actual.prop, expected.prop);
             });
         });
@@ -177,7 +191,7 @@ export class StateTestRunner {
 
     runMyInterfaceToTransformTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
         this.assertions.describe("MyInterfaceToTransform", () => {
-            this.assertions.it("should have the correct 'prop' property.", () => {
+            this.assertions.it("should have the correct 'prop' property", () => {
                 this.assertions.strictEqual(actual.prop, expected.prop);
             });
         });
@@ -190,6 +204,7 @@ export interface MyInterfaceTestStructure {
     prop3: MyClassTestStructure;
     prop4: ((MyInterfaceTestStructure | MyClassTestStructure) & string);
     prop5: string;
+    propWithOptionalDefinition?: MyClassTestStructure;
 }
 
 export interface MyClassTestStructure {
