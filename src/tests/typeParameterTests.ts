@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileHeaderTemplate, itMessage, itAssertion, describeAssertion, strictEqual} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("type parameter tests", () => {
@@ -34,9 +34,7 @@ describe(nameof(TestGenerator), () => {
 
         it("should write out the file", () => {
             const expectedCode =
-`${fileHeaderTemplate}
-
-export class StateTestRunner {
+`export class StateTestRunner {
     private readonly assertions: WrapperAssertions;
 
     constructor(assertions: Assertions) {
@@ -70,9 +68,8 @@ export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStruc
 
 export interface MyClassTestStructure<T> {
     prop: T;
-}
-`;
-            expect(structuresFile.write()).to.equal(expectedCode);
+}`;
+            expect(structuresFile.write()).to.equal(fileTemplate(expectedCode));
         });
     });
 });

@@ -1,2 +1,2 @@
-﻿export * from "./templates/fileHeaderTemplate";
+﻿export * from "./templates/fileTemplate";
 export * from "./templates/assertTemplates";

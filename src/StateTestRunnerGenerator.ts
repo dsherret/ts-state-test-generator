@@ -11,8 +11,8 @@ export class StateTestRunnerGenerator {
     private readonly testFunctionBodyWriter: TestFunctionBodyWriter;
 
     constructor(private readonly transformOptions: TransformOptions) {
-        this.testFunctionBodyWriter = new TestFunctionBodyWriter(transformOptions);
         this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer());
+        this.testFunctionBodyWriter = new TestFunctionBodyWriter(transformOptions);
     }
 
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
