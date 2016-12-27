@@ -3,15 +3,18 @@ import CodeBlockWriter from "code-block-writer";
 import {AssertionsClassGenerator} from "./AssertionsClassGenerator";
 import {TransformOptions} from "./TransformOptions";
 import {StateTestRunnerGenerator} from "./StateTestRunnerGenerator";
+import {WrapperFactory} from "./wrappers";
 
 export class TestGenerator {
     private readonly assertionsClassGenerator = new AssertionsClassGenerator();
     private readonly transformOptions: TransformOptions;
     private readonly stateTestRunnerGenerator: StateTestRunnerGenerator;
+    private readonly wrapperFactory: WrapperFactory;
 
     constructor(opts: { testStructurePrefix?: string; testStructureSuffix?: string; }) {
         this.transformOptions = new TransformOptions(opts);
         this.stateTestRunnerGenerator = new StateTestRunnerGenerator(this.transformOptions);
+        this.wrapperFactory = new WrapperFactory(this.transformOptions);
     }
 
     addTypeTransform(
@@ -25,7 +28,7 @@ export class TestGenerator {
     getTestFile(structures: (typeInfo.InterfaceDefinition | typeInfo.ClassDefinition)[]) {
         const testFile = typeInfo.createFile();
         this.assertionsClassGenerator.fillFile(testFile);
-        this.stateTestRunnerGenerator.fillTestFile(testFile, structures);
+        this.stateTestRunnerGenerator.fillTestFile(testFile, structures.map(s => this.wrapperFactory.getStructure(s)));
         return testFile;
     }
 }

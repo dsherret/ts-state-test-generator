@@ -9,9 +9,22 @@ describe(nameof(TestGenerator), () => {
             name: "MyTypeParameterClass",
             typeParameters: [{
                 name: "T"
+            }, {
+                name: "U",
+                constraintType: "MyClass<string>"
             }],
             properties: [{ name: "prop", type: "T" }]
         });
+        const myClass = typeInfo.createClass({
+            name: "MyClass",
+            typeParameters: [{ name: "T" }],
+            properties: [{ name: "prop", type: "T" }]
+        });
+        const constraintType = myTypeParameterClass.typeParameters[1].constraintType!;
+        constraintType.definitions.push(myClass);
+        const constraintTypeArgumentType = new typeInfo.TypeDefinition();
+        constraintTypeArgumentType.text = "string";
+        constraintType.typeArguments.push(constraintTypeArgumentType);
 
         const generator = new TestGenerator({});
         const structuresFile = generator.getTestFile([myTypeParameterClass]);
