@@ -2,6 +2,7 @@
 import {TransformOptions} from "./../TransformOptions";
 import {WrapperFactory} from "./WrapperFactory";
 import {StructureTypeWrapper} from "./StructureTypeWrapper";
+import {StructureTypeParameterWrapper} from "./StructureTypeParameterWrapper";
 
 type ClassOrInterfaceType = typeInfo.InterfaceDefinition | typeInfo.ClassDefinition;
 type ClassOrInterfacePropertyType = typeInfo.InterfacePropertyDefinition | typeInfo.ClassPropertyDefinition;
@@ -53,14 +54,17 @@ export class StructureWrapper {
     }
 
     getNameWithTypeParameters() {
-        return this.getNameWithTypeParametersInternal(this.getName());
+        return this.getNameWithTypeParametersInternal(this.getName(), t => t.getName());
     }
 
     getTestStructureNameWithTypeParameters() {
-        return this.getNameWithTypeParametersInternal(this.getTestStructureName());
+        return this.getNameWithTypeParametersInternal(this.getTestStructureName(), t => t.getTestStructureName());
     }
 
-    private getNameWithTypeParametersInternal(name: string) {
+    private getNameWithTypeParametersInternal(
+        name: string,
+        getTypeParamName: (typeParam: StructureTypeParameterWrapper) => string
+    ) {
         const typeParams = this.getTypeParameters();
         if (typeParams.length === 0)
             return name;
@@ -69,7 +73,7 @@ export class StructureWrapper {
         typeParams.forEach((typeParam, i) => {
             if (i > 0)
                 name += ", ";
-            name += typeParam.getName();
+            name += getTypeParamName(typeParam);
         });
         name += ">";
         return name;

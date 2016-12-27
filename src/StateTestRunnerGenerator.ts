@@ -40,11 +40,21 @@ export class StateTestRunnerGenerator {
                 }]
             });
 
-            structure.getTypeParameters().forEach(typeParam => {
+            const typeParameters = structure.getTypeParameters();
+            // add for actual
+            typeParameters.forEach(typeParam => {
                 const constraintType = typeParam.getConstraintType();
                 testMethod.addTypeParameter({
                     name: typeParam.getName(),
                     constraintType: constraintType == null ? undefined : constraintType.getText()
+                });
+            });
+            // add for expected
+            typeParameters.forEach(typeParam => {
+                const constraintType = typeParam.getConstraintType();
+                testMethod.addTypeParameter({
+                    name: typeParam.getTestStructureName(),
+                    constraintType: constraintType == null ? undefined : constraintType.getTestStructureName()
                 });
             });
 

@@ -12,6 +12,10 @@ export class StructureTypeParameterWrapper {
         return this.typeParam.name;
     }
 
+    getTestStructureName() {
+        return this.getName() + "Expected";
+    }
+
     getConstraintType() {
         return (this.typeParam.constraintType == null) ? null : this.wrapperFactory.getStructureType(this.typeParam.constraintType!);
     }

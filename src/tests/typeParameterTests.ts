@@ -33,6 +33,9 @@ describe(nameof(TestGenerator), () => {
         const structuresFile = generator.getTestFile([myTypeParameterClass]);
 
         it("should write out the file", () => {
+/*`export class MyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>> ` +
+`implements Test<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
+}`*/
             const expectedCode =
 `export class StateTestRunner {
     private readonly assertions: WrapperAssertions;
@@ -41,7 +44,8 @@ describe(nameof(TestGenerator), () => {
         this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
     }
 
-    runMyTypeParameterClassTest<T, U extends MyClass<string>>(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<T, U>) {
+    runMyTypeParameterClassTest<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>` +
+`(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
         ${describeAssertion}("MyTypeParameterClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
                 ${strictEqual("prop")}
@@ -52,7 +56,7 @@ describe(nameof(TestGenerator), () => {
         });
     }
 
-    runMyClassTest<T>(actual: MyClass<T>, expected: MyClassTestStructure<T>) {
+    runMyClassTest<T, TExpected>(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
         ${describeAssertion}("MyClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
                 ${strictEqual("prop")}
