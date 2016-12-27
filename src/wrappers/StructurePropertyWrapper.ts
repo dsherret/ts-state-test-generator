@@ -20,7 +20,7 @@ export class StructurePropertyWrapper {
     }
 
     getType() {
-        return this.prop.type;
+        return this.wrapperFactory.getStructureType(this.prop.type);
     }
 
     shouldWriteOptionalAnyCheck() {

@@ -1,7 +1,11 @@
 ﻿import * as typeInfo from "ts-type-info";
+import {WrapperFactory} from "./WrapperFactory";
 
 export class StructureTypeParameterWrapper {
-    constructor(private readonly typeParam: typeInfo.TypeParameterDefinition) {
+    constructor(
+        private readonly wrapperFactory: WrapperFactory,
+        private readonly typeParam: typeInfo.TypeParameterDefinition
+    ) {
     }
 
     getName() {
@@ -9,6 +13,6 @@ export class StructureTypeParameterWrapper {
     }
 
     getConstraintType() {
-        return this.typeParam.constraintType;
+        return (this.typeParam.constraintType == null) ? null : this.wrapperFactory.getStructureType(this.typeParam.constraintType!);
     }
 }

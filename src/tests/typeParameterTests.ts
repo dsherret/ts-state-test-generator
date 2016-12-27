@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileHeaderTemplate} from "./templates/fileHeaderTemplate";
+import {fileHeaderTemplate, itMessage, itAssertion, describeAssertion, strictEqual} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("type parameter tests", () => {
@@ -13,7 +13,10 @@ describe(nameof(TestGenerator), () => {
                 name: "U",
                 constraintType: "MyClass<string>"
             }],
-            properties: [{ name: "prop", type: "T" }]
+            properties: [
+                { name: "prop", type: "T" },
+                { name: "prop2", type: "U" }
+            ]
         });
         const myClass = typeInfo.createClass({
             name: "MyClass",
@@ -40,16 +43,32 @@ export class StateTestRunner {
         this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
     }
 
-    runMyTypeParameterClassTest<T>(actual: MyTypeParameterClass<T>, expected: MyTypeParameterClassTestStructure<T>) {
-        this.assertions.describe("MyTypeParameterClass", () => {
-            this.assertions.it("should have the correct 'prop' property", () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
+    runMyTypeParameterClassTest<T, U extends MyClass<string>>(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<T, U>) {
+        ${describeAssertion}("MyTypeParameterClass", () => {
+            ${itAssertion}(${itMessage("prop")}, () => {
+                ${strictEqual("prop")}
+            });
+            ${itAssertion}(${itMessage("prop2")}, () => {
+                ${strictEqual("prop2")}
+            });
+        });
+    }
+
+    runMyClassTest<T>(actual: MyClass<T>, expected: MyClassTestStructure<T>) {
+        ${describeAssertion}("MyClass", () => {
+            ${itAssertion}(${itMessage("prop")}, () => {
+                ${strictEqual("prop")}
             });
         });
     }
 }
 
-export interface MyTypeParameterClassTestStructure<T> {
+export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStructure<string>> {
+    prop: T;
+    prop2: U;
+}
+
+export interface MyClassTestStructure<T> {
     prop: T;
 }
 `;

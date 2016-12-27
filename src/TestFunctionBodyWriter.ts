@@ -1,7 +1,7 @@
 ﻿import CodeBlockWriter from "code-block-writer";
 import * as typeInfo from "ts-type-info";
 import {TransformOptions} from "./TransformOptions";
-import {StructureWrapper, StructurePropertyWrapper} from "./wrappers";
+import {StructureWrapper, StructurePropertyWrapper, StructureTypeWrapper} from "./wrappers";
 
 export class TestFunctionBodyWriter {
     constructor(private readonly transformOptions: TransformOptions) {
@@ -35,8 +35,8 @@ export class TestFunctionBodyWriter {
         }).write(");").newLine();
     }
 
-    private writeTypeTest(prop: StructurePropertyWrapper, typeDef: typeInfo.TypeDefinition, writer: CodeBlockWriter) {
-        const matchedTypeTransforms = this.transformOptions.getTypeTransforms().filter(t => t.condition(typeDef));
+    private writeTypeTest(prop: StructurePropertyWrapper, structureType: StructureTypeWrapper, writer: CodeBlockWriter) {
+        const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
 
         if (matchedTypeTransforms.length > 0) {
             writer.write("((actualProperty, expectedProperty) =>").inlineBlock(() => {
@@ -47,9 +47,11 @@ export class TestFunctionBodyWriter {
             return;
         }
 
-        if (typeDef.unionTypes.length > 0) {
+        const unionTypes = structureType.getUnionTypes();
+        const intersectionTypes = structureType.getIntersectionTypes();
+        if (unionTypes.length > 0) {
             writer.write("this.assertions.assertAny(");
-            typeDef.unionTypes.forEach((subType, i) => {
+            unionTypes.forEach((subType, i) => {
                 writer.conditionalWrite(i !== 0, ", ");
                 writer.write("() => ").inlineBlock(() => {
                     this.writeTypeTest(prop, subType, writer);
@@ -57,20 +59,19 @@ export class TestFunctionBodyWriter {
             });
             writer.write(");").newLine();
         }
-        else if (typeDef.intersectionTypes.length > 0) {
-            typeDef.intersectionTypes.forEach(subType => {
+        else if (intersectionTypes.length > 0) {
+            intersectionTypes.forEach(subType => {
                 this.writeTypeTest(prop, subType, writer);
             });
         }
         else {
-            const hasValidDefinition = typeDef.definitions.some(typeDefinitionDefinition =>
-                typeDefinitionDefinition instanceof typeInfo.ClassDefinition ||
-                typeDefinitionDefinition instanceof typeInfo.InterfaceDefinition);
+            const validDefinitions = structureType.getImmediateValidDefinitions();
+            const hasValidDefinition = validDefinitions.length > 0;
 
             if (hasValidDefinition)
-                writer.writeLine(`this.run${typeDef.definitions[0].name}Test(` +
-                    `actual.${prop.getName()} as any as ${typeDef.definitions[0].name}, ` +
-                    `expected.${prop.getName()} as any as ${this.transformOptions.getNameToTestStructureName(typeDef.definitions[0].name)});`);
+                writer.writeLine(`this.run${validDefinitions[0].getName()}Test(` +
+                    `actual.${prop.getName()} as any as ${validDefinitions[0].getName()}, ` +
+                    `expected.${prop.getName()} as any as ${this.transformOptions.getNameToTestStructureName(validDefinitions[0].getName())});`);
             else
                 writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expected.${prop.getName()});`);
         }

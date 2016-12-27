@@ -12,31 +12,31 @@ export class StateTestRunnerGenerator {
 
     constructor(private readonly transformOptions: TransformOptions) {
         this.testFunctionBodyWriter = new TestFunctionBodyWriter(transformOptions);
-        this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer(transformOptions));
+        this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer());
     }
 
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
+        const stateTestRunnerClass = testFile.addClass({
+            name: `StateTestRunner`,
+            isExported: true
+        });
+        this.addConstructorToClass(stateTestRunnerClass);
+
         for (let i = 0; i < structures.length; i++) {
             const structure = structures[i];
             const writer = new CodeBlockWriter();
-            const stateTestRunnerClass = testFile.addClass({
-                name: `${structure.getName()}TestRunner`,
-                isExported: true
-            });
 
             this.testStructureGenerator.fillTestFileFromDefinition(testFile, structure);
             this.testFunctionBodyWriter.writeForStructure(structure, writer);
 
-            this.addConstructorToClass(stateTestRunnerClass);
-
             const testMethod = stateTestRunnerClass.addMethod({
-                name: `runTest`,
+                name: `run${structure.getName()}Test`,
                 parameters: [{
                     name: "actual",
-                    type: this.getNameWithTypeParameters(structure.getName(), structure)
+                    type: structure.getNameWithTypeParameters()
                 }, {
                     name: "expected",
-                    type: this.getNameWithTypeParameters(this.transformOptions.getNameToTestStructureName(structure.getName()), structure)
+                    type: structure.getTestStructureNameWithTypeParameters()
                 }]
             });
 
@@ -44,7 +44,7 @@ export class StateTestRunnerGenerator {
                 const constraintType = typeParam.getConstraintType();
                 testMethod.addTypeParameter({
                     name: typeParam.getName(),
-                    constraintType: constraintType == null ? undefined : constraintType.text
+                    constraintType: constraintType == null ? undefined : constraintType.getText()
                 });
             });
 
@@ -63,6 +63,17 @@ export class StateTestRunnerGenerator {
                     structures.push(extendsStructure);
             });
 
+            structure.getTypeParameters().forEach(typeParam => {
+                const constraintType = typeParam.getConstraintType();
+                if (constraintType == null)
+                    return;
+
+                constraintType.getAllValidDefinitions().forEach(constraintTypeStructure => {
+                    if (structures.indexOf(constraintTypeStructure) === -1)
+                        structures.push(constraintTypeStructure);
+                });
+            });
+
             testMethod.onWriteFunctionBody = methodBodyWriter => {
                 methodBodyWriter.write(writer.toString());
             };
@@ -72,28 +83,20 @@ export class StateTestRunnerGenerator {
     }
 
     private addConstructorToClass(testClass: typeInfo.ClassDefinition) {
+        testClass.addProperty({
+            name: "assertions",
+            isReadonly: true,
+            scope: typeInfo.Scope.Private,
+            type: "WrapperAssertions"
+        });
         testClass.setConstructor({
             parameters: [{
                 name: "assertions",
-                type: "WrapperAssertions",
-                scope: typeInfo.ClassConstructorParameterScope.Private,
-                isReadonly: true
-            }]
+                type: "Assertions"
+            }],
+            onWriteFunctionBody: writer => {
+                writer.writeLine("this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());");
+            }
         });
-    }
-
-    private getNameWithTypeParameters(name: string, structure: StructureWrapper) {
-        const typeParams = structure.getTypeParameters();
-        if (typeParams.length === 0)
-            return name;
-
-        name += "<";
-        typeParams.forEach((typeParam, i) => {
-            if (i > 0)
-                name += ", ";
-            name += typeParam.getName();
-        });
-        name += ">";
-        return name;
     }
 }

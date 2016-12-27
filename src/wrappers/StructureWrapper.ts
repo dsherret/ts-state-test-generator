@@ -1,6 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TransformOptions} from "./../TransformOptions";
 import {WrapperFactory} from "./WrapperFactory";
+import {StructureTypeWrapper} from "./StructureTypeWrapper";
 
 type ClassOrInterfaceType = typeInfo.InterfaceDefinition | typeInfo.ClassDefinition;
 type ClassOrInterfacePropertyType = typeInfo.InterfacePropertyDefinition | typeInfo.ClassPropertyDefinition;
@@ -29,6 +30,19 @@ export class StructureWrapper {
         return this.structure.typeParameters.map(t => this.wrapperFactory.getStructureTypeParameter(t));
     }
 
+    getValidExtendsTypes() {
+        const validExtendsTypes: StructureTypeWrapper[] = [];
+
+        this.structure.extendsTypes.forEach(extendsType => {
+            const hasValidDefinition = extendsType.definitions.some(extendsTypeDefinition => extendsTypeDefinition instanceof typeInfo.ClassDefinition);
+
+            if (hasValidDefinition)
+                validExtendsTypes.push(this.wrapperFactory.getStructureType(extendsType));
+        });
+
+        return validExtendsTypes;
+    }
+
     getValidExtendsStructures() {
         const validExtendsDefinitions: typeInfo.ClassDefinition[] = [];
         this.structure.extendsTypes.forEach(extendsType => {
@@ -36,5 +50,28 @@ export class StructureWrapper {
                 extendsTypeDefinition instanceof typeInfo.ClassDefinition) as typeInfo.ClassDefinition[]);
         });
         return validExtendsDefinitions.map(d => this.wrapperFactory.getStructure(d));
+    }
+
+    getNameWithTypeParameters() {
+        return this.getNameWithTypeParametersInternal(this.getName());
+    }
+
+    getTestStructureNameWithTypeParameters() {
+        return this.getNameWithTypeParametersInternal(this.getTestStructureName());
+    }
+
+    private getNameWithTypeParametersInternal(name: string) {
+        const typeParams = this.getTypeParameters();
+        if (typeParams.length === 0)
+            return name;
+
+        name += "<";
+        typeParams.forEach((typeParam, i) => {
+            if (i > 0)
+                name += ", ";
+            name += typeParam.getName();
+        });
+        name += ">";
+        return name;
     }
 }

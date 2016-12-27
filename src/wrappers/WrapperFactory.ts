@@ -2,6 +2,7 @@
 import {TransformOptions} from "./../TransformOptions";
 import {StructurePropertyWrapper} from "./StructurePropertyWrapper";
 import {StructureTypeParameterWrapper} from "./StructureTypeParameterWrapper";
+import {StructureTypeWrapper} from "./StructureTypeWrapper";
 import {StructureWrapper} from "./StructureWrapper";
 
 type ClassOrInterfaceType = typeInfo.InterfaceDefinition | typeInfo.ClassDefinition;
@@ -33,6 +34,10 @@ export class WrapperFactory {
     }
 
     getStructureTypeParameter(definition: typeInfo.TypeParameterDefinition) {
-        return new StructureTypeParameterWrapper(definition);
+        return new StructureTypeParameterWrapper(this, definition);
+    }
+
+    getStructureType(definition: typeInfo.TypeDefinition) {
+        return new StructureTypeWrapper(this, this.transformOptions, definition);
     }
 }

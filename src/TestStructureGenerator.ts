@@ -13,6 +13,7 @@ export class TestStructureGenerator {
 
         this.fillTestStructureTypeParameters(structure, testStructure);
         this.fillTestStructureProperties(structure, testStructure);
+        this.addExtendsTypes(structure, testStructure);
     }
 
     private fillTestStructureTypeParameters(structure: StructureWrapper, testStructure: typeInfo.InterfaceDefinition) {
@@ -36,9 +37,10 @@ export class TestStructureGenerator {
     }
 
     private addExtendsTypes(structure: StructureWrapper, testStructure: typeInfo.InterfaceDefinition) {
-        const extendsStructures = structure.getValidExtendsStructures();
+        const extendsTypes = structure.getValidExtendsTypes();
 
-        if (extendsStructures.length > 0)
-            testStructure.addExtends(extendsStructures[0].getTestStructureName());
+        extendsTypes.forEach(extendsType => {
+            testStructure.addExtends(extendsType.getTestStructureName());
+        });
     }
 }
