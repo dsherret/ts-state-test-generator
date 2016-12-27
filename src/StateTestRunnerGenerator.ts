@@ -16,21 +16,22 @@ export class StateTestRunnerGenerator {
     }
 
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
-        const stateTestRunnerClass = testFile.addClass({
-            name: `StateTestRunner`,
-            isExported: true
-        });
-        this.addConstructorToClass(stateTestRunnerClass);
-
         for (let i = 0; i < structures.length; i++) {
             const structure = structures[i];
             const writer = new CodeBlockWriter();
 
             this.testStructureGenerator.fillTestFileFromDefinition(testFile, structure);
+
+            const testRunnerClass = testFile.addClass({
+                name: `${structure.getName()}TestRunner`,
+                isExported: true
+            });
+            this.addConstructorToClass(testRunnerClass);
+
             this.testFunctionBodyWriter.writeForStructure(structure, writer);
 
-            const testMethod = stateTestRunnerClass.addMethod({
-                name: `run${structure.getName()}Test`,
+            const testMethod = testRunnerClass.addMethod({
+                name: `runTest`,
                 parameters: [{
                     name: "actual",
                     type: structure.getNameWithTypeParameters()
@@ -40,21 +41,32 @@ export class StateTestRunnerGenerator {
                 }]
             });
 
+            testRunnerClass.addImplements(`Test<${structure.getNameWithTypeParameters()}, ${structure.getTestStructureNameWithTypeParameters()}>`);
+
             const typeParameters = structure.getTypeParameters();
-            // add for actual
+            // add type parameters for actual
             typeParameters.forEach(typeParam => {
                 const constraintType = typeParam.getConstraintType();
-                testMethod.addTypeParameter({
+                testRunnerClass.addTypeParameter({
                     name: typeParam.getName(),
                     constraintType: constraintType == null ? undefined : constraintType.getText()
                 });
             });
-            // add for expected
+            // add type parameters for expected
             typeParameters.forEach(typeParam => {
                 const constraintType = typeParam.getConstraintType();
-                testMethod.addTypeParameter({
+                testRunnerClass.addTypeParameter({
                     name: typeParam.getTestStructureName(),
                     constraintType: constraintType == null ? undefined : constraintType.getTestStructureName()
+                });
+            });
+            // add constructor parameters for type parameters
+            typeParameters.forEach(typeParam => {
+                testRunnerClass.constructorDef.addParameter({
+                    name: typeParam.getName() + "TestRunner",
+                    type: `Test<${typeParam.getName()}, ${typeParam.getTestStructureName()}>`,
+                    isReadonly: true,
+                    scope: typeInfo.ClassConstructorParameterScope.Private
                 });
             });
 
@@ -93,20 +105,13 @@ export class StateTestRunnerGenerator {
     }
 
     private addConstructorToClass(testClass: typeInfo.ClassDefinition) {
-        testClass.addProperty({
-            name: "assertions",
-            isReadonly: true,
-            scope: typeInfo.Scope.Private,
-            type: "WrapperAssertions"
-        });
         testClass.setConstructor({
             parameters: [{
                 name: "assertions",
-                type: "Assertions"
-            }],
-            onWriteFunctionBody: writer => {
-                writer.writeLine("this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());");
-            }
+                type: "WrapperAssertions",
+                isReadonly: true,
+                scope: typeInfo.ClassConstructorParameterScope.Private
+            }]
         });
     }
 }

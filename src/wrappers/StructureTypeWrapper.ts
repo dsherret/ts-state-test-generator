@@ -36,14 +36,6 @@ export class StructureTypeWrapper {
         return this.getValidDefinitionsFromDefs(this.typeDef.definitions);
     }
 
-    private getValidDefinitionsFromDefs(defs: typeInfo.ExportableDefinitions[]) {
-        const validDefs = defs.filter(d =>
-            d instanceof typeInfo.ClassDefinition ||
-            d instanceof typeInfo.InterfaceDefinition) as ClassOrInterfaceType[];
-
-        return validDefs.map(d => this.wrapperFactory.getStructure(d));
-    }
-
     getTestStructureName() {
         const validDefinitions = this.getImmediateValidDefinitions();
         const hasValidDefinition = validDefinitions.length > 0;
@@ -65,5 +57,13 @@ export class StructureTypeWrapper {
         name += ">";
 
         return name;
+    }
+
+    private getValidDefinitionsFromDefs(defs: typeInfo.ExportableDefinitions[]) {
+        const validDefs = defs.filter(d =>
+            d instanceof typeInfo.ClassDefinition ||
+            d instanceof typeInfo.InterfaceDefinition) as ClassOrInterfaceType[];
+
+        return validDefs.map(d => this.wrapperFactory.getStructure(d));
     }
 }

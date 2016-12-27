@@ -33,19 +33,19 @@ describe(nameof(TestGenerator), () => {
         const structuresFile = generator.getTestFile([myTypeParameterClass]);
 
         it("should write out the file", () => {
-/*`export class MyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>> ` +
-`implements Test<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
-}`*/
             const expectedCode =
-`export class StateTestRunner {
-    private readonly assertions: WrapperAssertions;
+`export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStructure<string>> {
+    prop: T;
+    prop2: U;
+}
 
-    constructor(assertions: Assertions) {
-        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+export class MyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>> \
+implements Test<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: Test<T, TExpected>, \
+private readonly UTestRunner: Test<U, UExpected>) {
     }
 
-    runMyTypeParameterClassTest<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>` +
-`(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
+    runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
         ${describeAssertion}("MyTypeParameterClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
                 ${strictEqual("prop")}
@@ -55,23 +55,23 @@ describe(nameof(TestGenerator), () => {
             });
         });
     }
+}
 
-    runMyClassTest<T, TExpected>(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
+export interface MyClassTestStructure<T> {
+    prop: T;
+}
+
+export class MyClassTestRunner<T, TExpected> implements Test<MyClass<T>, MyClassTestStructure<TExpected>> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: Test<T, TExpected>) {
+    }
+
+    runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
         ${describeAssertion}("MyClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
                 ${strictEqual("prop")}
             });
         });
     }
-}
-
-export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStructure<string>> {
-    prop: T;
-    prop2: U;
-}
-
-export interface MyClassTestStructure<T> {
-    prop: T;
 }`;
             expect(structuresFile.write()).to.equal(fileTemplate(expectedCode));
         });
