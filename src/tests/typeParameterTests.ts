@@ -48,10 +48,10 @@ private readonly UTestRunner: Test<U, UExpected>) {
     runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
         ${describeAssertion}("MyTypeParameterClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
-                ${strictEqual("prop")}
+                this.TTestRunner.runTest(actual.prop, expected.prop);
             });
             ${itAssertion}(${itMessage("prop2")}, () => {
-                ${strictEqual("prop2")}
+                this.UTestRunner.runTest(actual.prop2, expected.prop2);
             });
         });
     }
@@ -68,7 +68,7 @@ export class MyClassTestRunner<T, TExpected> implements Test<MyClass<T>, MyClass
     runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
         ${describeAssertion}("MyClass", () => {
             ${itAssertion}(${itMessage("prop")}, () => {
-                ${strictEqual("prop")}
+                this.TTestRunner.runTest(actual.prop, expected.prop);
             });
         });
     }

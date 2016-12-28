@@ -16,26 +16,26 @@ export class TestFunctionBodyWriter {
             });
 
             structure.getProperties().forEach(prop => {
-                this.writeTestForProperty(prop, writer);
+                this.writeTestForProperty(structure, prop, writer);
             });
         }).write(");").newLine();
     }
 
-    private writeTestForProperty(prop: StructurePropertyWrapper, writer: CodeBlockWriter) {
+    private writeTestForProperty(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {
         writer.write(`this.assertions.it("should have the correct '${prop.getName()}' property", () => `).inlineBlock(() => {
             if (prop.shouldWriteOptionalAnyCheck()) {
                 writer.write("this.assertions.assertAny(() => ").inlineBlock(() => {
                     writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, undefined);`);
                 }).write(", () => ").inlineBlock(() => {
-                    this.writeTypeTest(prop, prop.getType(), writer);
+                    this.writeTypeTest(structure, prop, prop.getType(), writer);
                 }).write(");");
             }
             else
-                this.writeTypeTest(prop, prop.getType(), writer);
+                this.writeTypeTest(structure, prop, prop.getType(), writer);
         }).write(");").newLine();
     }
 
-    private writeTypeTest(prop: StructurePropertyWrapper, structureType: StructureTypeWrapper, writer: CodeBlockWriter) {
+    private writeTypeTest(structure: StructureWrapper, prop: StructurePropertyWrapper, structureType: StructureTypeWrapper, writer: CodeBlockWriter) {
         const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
 
         if (matchedTypeTransforms.length > 0) {
@@ -54,22 +54,25 @@ export class TestFunctionBodyWriter {
             unionTypes.forEach((subType, i) => {
                 writer.conditionalWrite(i !== 0, ", ");
                 writer.write("() => ").inlineBlock(() => {
-                    this.writeTypeTest(prop, subType, writer);
+                    this.writeTypeTest(structure, prop, subType, writer);
                 });
             });
             writer.write(");").newLine();
         }
         else if (intersectionTypes.length > 0) {
             intersectionTypes.forEach(subType => {
-                this.writeTypeTest(prop, subType, writer);
+                this.writeTypeTest(structure, prop, subType, writer);
             });
         }
         else {
             const validDefinitions = structureType.getImmediateValidDefinitions();
             const hasValidDefinition = validDefinitions.length > 0;
+            const isTypeParameterType = structure.getTypeParameters().some(typeParam => typeParam.getName() === structureType.getText());
 
-            if (hasValidDefinition)
-                writer.writeLine(`this.run${validDefinitions[0].getName()}Test(` +
+            if (isTypeParameterType)
+                writer.writeLine(`this.${structureType.getText()}TestRunner.runTest(actual.${prop.getName()}, expected.${prop.getName()});`);
+            else if (hasValidDefinition)
+                writer.writeLine(`this.${validDefinitions[0].getName()}TestRunner.runTest(` +
                     `actual.${prop.getName()} as any as ${validDefinitions[0].getName()}, ` +
                     `expected.${prop.getName()} as any as ${this.transformOptions.getNameToTestStructureName(validDefinitions[0].getName())});`);
             else
