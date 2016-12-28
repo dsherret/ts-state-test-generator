@@ -1,9 +1,9 @@
 ﻿import {assertionsTemplate} from "./assertionsTemplate";
-import {testInterfaceTemplate} from "./testInterfaceTemplate";
+import {testRunnerInterfaceTemplate} from "./testRunnerInterfaceTemplate";
 
 export const fileHeaderTemplate =
 `import * as assert from "assert";
 
 ${assertionsTemplate}
 
-${testInterfaceTemplate}`;
+${testRunnerInterfaceTemplate}`;

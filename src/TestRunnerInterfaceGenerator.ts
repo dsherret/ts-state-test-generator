@@ -1,9 +1,9 @@
 ﻿import * as typeInfo from "ts-type-info";
 
-export class BaseTestInterfaceGenerator {
+export class TestRunnerInterfaceGenerator {
     fillFile(file: typeInfo.FileDefinition) {
         file.addInterface({
-            name: "Test",
+            name: "TestRunner",
             isExported: true,
             typeParameters: [{ name: "TActual" }, { name: "TExpected" }],
             methods: [{

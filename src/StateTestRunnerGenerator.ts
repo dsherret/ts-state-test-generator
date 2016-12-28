@@ -41,7 +41,7 @@ export class StateTestRunnerGenerator {
                 }]
             });
 
-            testRunnerClass.addImplements(`Test<${structure.getNameWithTypeParameters()}, ${structure.getTestStructureNameWithTypeParameters()}>`);
+            testRunnerClass.addImplements(`TestRunner<${structure.getNameWithTypeParameters()}, ${structure.getTestStructureNameWithTypeParameters()}>`);
 
             const typeParameters = structure.getTypeParameters();
             // add type parameters for actual
@@ -64,7 +64,7 @@ export class StateTestRunnerGenerator {
             typeParameters.forEach(typeParam => {
                 testRunnerClass.constructorDef.addParameter({
                     name: typeParam.getName() + "TestRunner",
-                    type: `Test<${typeParam.getName()}, ${typeParam.getTestStructureName()}>`,
+                    type: `TestRunner<${typeParam.getName()}, ${typeParam.getTestStructureName()}>`,
                     isReadonly: true,
                     scope: typeInfo.ClassConstructorParameterScope.Private
                 });

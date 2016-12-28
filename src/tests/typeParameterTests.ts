@@ -40,9 +40,9 @@ describe(nameof(TestGenerator), () => {
 }
 
 export class MyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>> \
-implements Test<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: Test<T, TExpected>, \
-private readonly UTestRunner: Test<U, UExpected>) {
+implements TestRunner<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: TestRunner<T, TExpected>, \
+private readonly UTestRunner: TestRunner<U, UExpected>) {
     }
 
     runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
@@ -61,8 +61,8 @@ export interface MyClassTestStructure<T> {
     prop: T;
 }
 
-export class MyClassTestRunner<T, TExpected> implements Test<MyClass<T>, MyClassTestStructure<TExpected>> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: Test<T, TExpected>) {
+export class MyClassTestRunner<T, TExpected> implements TestRunner<MyClass<T>, MyClassTestStructure<TExpected>> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: TestRunner<T, TExpected>) {
     }
 
     runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
