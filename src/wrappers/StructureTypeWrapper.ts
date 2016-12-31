@@ -36,15 +36,28 @@ export class StructureTypeWrapper {
         return this.getValidDefinitionsFromDefs(this.typeDef.definitions);
     }
 
-    getTestStructureName() {
-        const validDefinitions = this.getImmediateValidDefinitions();
-        const hasValidDefinition = validDefinitions.length > 0;
+    getName(): string {
+        const validDefs = this.getImmediateValidDefinitions();
 
-        if (!hasValidDefinition)
-            return this.typeDef.text;
+        if (validDefs.length === 0)
+            return this.getText();
 
-        let name = validDefinitions[0].getTestStructureName();
+        return this.getNameWithTypeParametersInternal(validDefs[0].getName(), structureType => structureType.getName());
+    }
 
+    getTestStructureName(): string {
+        const validDefs = this.getImmediateValidDefinitions();
+
+        if (validDefs.length === 0)
+            return this.getText();
+
+        return this.getNameWithTypeParametersInternal(validDefs[0].getTestStructureName(), structureType => structureType.getTestStructureName());
+    }
+
+    private getNameWithTypeParametersInternal(
+        name: string,
+        getTypeName: (structureType: StructureTypeWrapper) => string
+    ) {
         if (this.typeDef.typeArguments.length === 0)
             return name;
 

@@ -10,15 +10,19 @@ export class TestFunctionBodyWriter {
     writeForStructure(structure: StructureWrapper, writer: CodeBlockWriter) {
         writer.write(`this.assertions.describe("${structure.getName()}", () => `).inlineBlock(() => {
             structure.getValidExtendsStructures().forEach(extendsStructure => {
-                writer.writeLine(`this.run${extendsStructure.getName()}Test(` +
-                    `actual as any as ${extendsStructure.getName()}, ` +
-                    `expected);`);
+                this.writeExtends(extendsStructure, writer);
             });
 
             structure.getProperties().forEach(prop => {
                 this.writeTestForProperty(structure, prop, writer);
             });
         }).write(");").newLine();
+    }
+
+    private writeExtends(extendsStructure: StructureWrapper, writer: CodeBlockWriter) {
+        writer.writeLine(`this.${extendsStructure.getName()}TestRunner.runTest(` +
+            `actual, ` +
+            `expected);`);
     }
 
     private writeTestForProperty(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {

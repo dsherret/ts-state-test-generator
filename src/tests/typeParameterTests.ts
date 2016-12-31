@@ -23,18 +23,100 @@ describe(nameof(TestGenerator), () => {
             typeParameters: [{ name: "T" }],
             properties: [{ name: "prop", type: "T" }]
         });
+        const myExtendsClass = typeInfo.createClass({
+            name: "MyExtendsClass",
+            properties: [{ name: "extendsProp", type: "Date" }]
+        });
+        // type parameter class
         const constraintType = myTypeParameterClass.typeParameters[1].constraintType!;
         constraintType.definitions.push(myClass);
         const constraintTypeArgumentType = new typeInfo.TypeDefinition();
         constraintTypeArgumentType.text = "string";
         constraintType.typeArguments.push(constraintTypeArgumentType);
+        // extends class
+        myExtendsClass.addExtends(myTypeParameterClass, ["string", "MyClass<string>"]);
+        myExtendsClass.extendsTypes[0].definitions.push(myTypeParameterClass);
+        const extendsClassExtendsTypeTypeArg1 = new typeInfo.TypeDefinition();
+        extendsClassExtendsTypeTypeArg1.text = "string";
+        myExtendsClass.extendsTypes[0].typeArguments.push(extendsClassExtendsTypeTypeArg1);
+        const extendsClassExtendsTypeTypeArg2 = new typeInfo.TypeDefinition();
+        extendsClassExtendsTypeTypeArg2.text = "MyClass<string>";
+        extendsClassExtendsTypeTypeArg2.definitions.push(myClass);
+        extendsClassExtendsTypeTypeArg2.typeArguments.push(extendsClassExtendsTypeTypeArg1);
+        myExtendsClass.extendsTypes[0].typeArguments.push(extendsClassExtendsTypeTypeArg2);
 
         const generator = new TestGenerator({});
-        const structuresFile = generator.getTestFile([myTypeParameterClass]);
+        const structuresFile = generator.getTestFile([myExtendsClass]);
 
         it("should write out the file", () => {
             const expectedCode =
-`export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStructure<string>> {
+`export class TestRunnerFactory {
+    private readonly assertions: WrapperAssertions;
+
+    constructor(assertions?: Assertions) {
+        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+    }
+
+    getStrictEqualTestRunner() {
+        return new StrictEqualTestRunner(this.assertions);
+    }
+
+    getMyExtendsClassTestRunner() {
+        return new MyExtendsClassTestRunner(this.assertions);
+    }
+
+    getMyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>\
+(TTestRunner: TestRunner<T, TExpected>, UTestRunner: TestRunner<U, UExpected>) {
+        return new MyTypeParameterClassTestRunner(this.assertions, TTestRunner, UTestRunner);
+    }
+
+    getMyClassTestRunner<T, TExpected>(TTestRunner: TestRunner<T, TExpected>) {
+        return new MyClassTestRunner(this.assertions, TTestRunner);
+    }
+}
+
+export class StateTestRunner {
+    constructor(private readonly factory: TestRunnerFactory) {
+    }
+
+    runMyExtendsClassTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
+        const testRunner = this.factory.getMyExtendsClassTestRunner();
+        testRunner.runTest(actual, expected);
+    }
+
+    runMyTypeParameterClassTest<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>\
+(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>, \
+TTestRunner: TestRunner<T, TExpected>, UTestRunner: TestRunner<U, UExpected>) {
+        const testRunner = this.factory.getMyTypeParameterClassTestRunner(TTestRunner, UTestRunner);
+        testRunner.runTest(actual, expected);
+    }
+
+    runMyClassTest<T, TExpected>(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>, TTestRunner: TestRunner<T, TExpected>) {
+        const testRunner = this.factory.getMyClassTestRunner(TTestRunner);
+        testRunner.runTest(actual, expected);
+    }
+}
+
+export interface MyExtendsClassTestStructure extends MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>> {
+    extendsProp: Date;
+}
+
+export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyExtendsClassTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, \
+MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
+    }
+
+    runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
+        this.assertions.describe("MyExtendsClass", () => {
+            this.MyTypeParameterClassTestRunner.runTest(actual, expected);
+            this.assertions.it("should have the correct 'extendsProp' property", () => {
+                this.assertions.strictEqual(actual.extendsProp, expected.extendsProp);
+            });
+        });
+    }
+}
+
+export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStructure<string>> {
     prop: T;
     prop2: U;
 }
