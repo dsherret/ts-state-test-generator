@@ -100,10 +100,12 @@ MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
     }
 
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
-        this.assertions.describe("MyExtendsClass", () => {
+        ${describeAssertion}("MyExtendsClass", () => {
             this.MyTypeParameterClassTestRunner.runTest(actual, expected);
-            this.assertions.it("should have the correct 'extendsProp' property", () => {
-                ${strictEqual("extendsProp")}
+            ${describeAssertion}("extendsProp", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    ${strictEqual("extendsProp")}
+                });
             });
         });
     }
@@ -122,10 +124,10 @@ private readonly UTestRunner: TestRunner<U, UExpected>) {
 
     runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
         ${describeAssertion}("MyTypeParameterClass", () => {
-            ${itAssertion}(${itMessage("prop")}, () => {
+            ${describeAssertion}("prop", () => {
                 this.TTestRunner.runTest(actual.prop, expected.prop);
             });
-            ${itAssertion}(${itMessage("prop2")}, () => {
+            ${describeAssertion}("prop2", () => {
                 this.UTestRunner.runTest(actual.prop2, expected.prop2);
             });
         });
@@ -142,7 +144,7 @@ export class MyClassTestRunner<T, TExpected> implements TestRunner<MyClass<T>, M
 
     runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
         ${describeAssertion}("MyClass", () => {
-            ${itAssertion}(${itMessage("prop")}, () => {
+            ${describeAssertion}("prop", () => {
                 this.TTestRunner.runTest(actual.prop, expected.prop);
             });
         });

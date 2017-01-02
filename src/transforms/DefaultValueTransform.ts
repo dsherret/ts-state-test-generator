@@ -1,5 +1,4 @@
 ﻿import * as typeInfo from "ts-type-info";
-import CodeBlockWriter from "code-block-writer";
 
 export interface DefaultValueTransform {
     condition: (

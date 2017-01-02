@@ -1,6 +1,6 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
+import {TestGenerator} from "./../TestGenerator";
 import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
@@ -73,8 +73,10 @@ export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyEx
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
         ${describeAssertion}("MyExtendsClass", () => {
             this.MyBaseClassTestRunner.runTest(actual, expected);
-            ${itAssertion}(${itMessage("extendsProp")}, () => {
-                ${strictEqual("extendsProp")}
+            ${describeAssertion}("extendsProp", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    ${strictEqual("extendsProp")}
+                });
             });
         });
     }
@@ -104,8 +106,10 @@ export class MyBaseClassTestRunner implements TestRunner<MyBaseClass, MyBaseClas
 
     runTest(actual: MyBaseClass, expected: MyBaseClassTestStructure) {
         ${describeAssertion}("MyBaseClass", () => {
-            ${itAssertion}(${itMessage("prop")}, () => {
-                ${strictEqual("prop")}
+            ${describeAssertion}("prop", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    ${strictEqual("prop")}
+                });
             });
         });
     }

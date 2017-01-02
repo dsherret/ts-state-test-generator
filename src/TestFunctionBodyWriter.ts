@@ -1,7 +1,6 @@
 ﻿import CodeBlockWriter from "code-block-writer";
 import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper, StructurePropertyWrapper, StructureTypeWrapper} from "./wrappers";
-import {DefaultValueTransform} from "./transforms";
 
 export class TestFunctionBodyWriter {
     constructor(private readonly transformOptions: TransformOptions) {
@@ -26,20 +25,22 @@ export class TestFunctionBodyWriter {
     }
 
     private writeTestForProperty(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {
-        writer.write(`this.assertions.it("should have the correct '${prop.getName()}' property", () => `).inlineBlock(() => {
+        writer.write(`this.assertions.describe("${prop.getName()}", () => `).inlineBlock(() => {
             if (prop.shouldWriteOptionalAnyCheck()) {
                 writer.write("this.assertions.assertAny(() => ").inlineBlock(() => {
-                    writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, undefined);`);
+                    writer.write(`this.assertions.it("should be undefined", () => `).inlineBlock(() => {
+                        writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, undefined);`);
+                    }).write(");");
                 }).write(", () => ").inlineBlock(() => {
-                    this.writeTypeTest(structure, prop, prop.getType(), writer);
+                    this.writePropertyTypeTest(structure, prop, prop.getType(), writer);
                 }).write(");");
             }
             else
-                this.writeTypeTest(structure, prop, prop.getType(), writer);
+                this.writePropertyTypeTest(structure, prop, prop.getType(), writer);
         }).write(");").newLine();
     }
 
-    private writeTypeTest(
+    private writePropertyTypeTest(
         structure: StructureWrapper,
         prop: StructurePropertyWrapper,
         structureType: StructureTypeWrapper,
@@ -47,10 +48,12 @@ export class TestFunctionBodyWriter {
     ) {
         const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
         if (matchedTypeTransforms.length > 0) {
-            writer.write("((actualProperty, expectedProperty) =>").inlineBlock(() => {
-                matchedTypeTransforms.forEach(typeTransform => {
-                    typeTransform.testWrite(writer);
-                });
+            writer.write("((actualProperty, expectedProperty) => ").inlineBlock(() => {
+                writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                    matchedTypeTransforms.forEach(typeTransform => {
+                        typeTransform.testWrite(writer);
+                    });
+                }).write(");");
             }).write(`)(actual.${prop.getName()}, expected.${prop.getName()});`).newLine();
             return;
         }
@@ -61,7 +64,9 @@ export class TestFunctionBodyWriter {
             writer.write(`if (typeof expectedValue === "undefined")`).block(() => {
                 writer.writeLine(`expectedValue = ${matchedDefaultValueTransforms[0].value};`);
             });
-            writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expectedValue);`);
+            writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expectedValue);`);
+            }).write(");");
             return;
         }
 
@@ -72,29 +77,55 @@ export class TestFunctionBodyWriter {
             unionTypes.forEach((subType, i) => {
                 writer.conditionalWrite(i !== 0, ", ");
                 writer.write("() => ").inlineBlock(() => {
-                    this.writeTypeTest(structure, prop, subType, writer);
+                    this.writePropertyTypeTest(structure, prop, subType, writer);
                 });
             });
             writer.write(");").newLine();
         }
         else if (intersectionTypes.length > 0) {
             intersectionTypes.forEach(subType => {
-                this.writeTypeTest(structure, prop, subType, writer);
+                this.writePropertyTypeTest(structure, prop, subType, writer);
             });
         }
         else {
-            const validDefinitions = structureType.getImmediateValidDefinitions();
-            const hasValidDefinition = validDefinitions.length > 0;
-            const isTypeParameterType = structure.getTypeParameters().some(typeParam => typeParam.getName() === structureType.getText());
+            this.writeTypeTest(structure, structureType, writer, `actual.${prop.getName()}`, `expected.${prop.getName()}`);
+        }
+    }
 
-            if (isTypeParameterType)
-                writer.writeLine(`this.${structureType.getText()}TestRunner.runTest(actual.${prop.getName()}, expected.${prop.getName()});`);
-            else if (hasValidDefinition)
-                writer.writeLine(`this.${validDefinitions[0].getName()}TestRunner.runTest(` +
-                    `actual.${prop.getName()} as any as ${validDefinitions[0].getName()}, ` +
-                    `expected.${prop.getName()} as any as ${this.transformOptions.getNameToTestStructureName(validDefinitions[0].getName())});`);
-            else
-                writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expected.${prop.getName()});`);
+    private writeTypeTest(
+        structure: StructureWrapper,
+        structureType: StructureTypeWrapper,
+        writer: CodeBlockWriter,
+        actualName: string,
+        expectedName: string
+    ) {
+        const validDefinitions = structureType.getImmediateValidDefinitions();
+        const hasValidDefinition = validDefinitions.length > 0;
+        const isTypeParameterType = structure.getTypeParameters().some(typeParam => typeParam.getName() === structureType.getText());
+        const isArrayType = structureType.getIsArrayType();
+
+        if (isArrayType) {
+            writer.write(`this.assertions.it("should have the same length", () => `).inlineBlock(() => {
+                writer.writeLine(`this.assertions.strictEqual(${actualName}.length, ${expectedName}.length);`);
+            }).write(");").newLine();
+
+            writer.write(`for (let i = 0; i < (${expectedName} || []).length; i++)`).block(() => {
+                writer.write("this.assertions.describe(`index ${i}`, () => ").inlineBlock(() => {
+                    this.writeTypeTest(structure, structureType.getArrayType()!, writer, `${actualName}[i]`, `${expectedName}[i]`);
+                }).write(");");
+            });
+        }
+        else if (isTypeParameterType)
+            writer.writeLine(`this.${structureType.getText()}TestRunner.runTest(${actualName}, ${expectedName});`);
+        else if (hasValidDefinition)
+            writer.writeLine(`this.${validDefinitions[0].getName()}TestRunner.runTest(` +
+                `${actualName} as any as ${validDefinitions[0].getName()}, ` +
+                `${expectedName} as any as ${this.transformOptions
+                .getNameToTestStructureName(validDefinitions[0].getName())});`);
+        else {
+            writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                writer.writeLine(`this.assertions.strictEqual(${actualName}, ${expectedName});`);
+            }).write(");");
         }
     }
 }

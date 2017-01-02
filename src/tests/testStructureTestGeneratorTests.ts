@@ -128,40 +128,52 @@ export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfac
 
     runTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
         ${describeAssertion}("MyInterface", () => {
-            ${itAssertion}(${itMessage("prop1")}, () => {
-                ${strictEqual("prop1")}
+            ${describeAssertion}("prop1", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    ${strictEqual("prop1")}
+                });
             });
-            ${itAssertion}(${itMessage("prop2")}, () => {
-                ${strictEqual("prop2")}
+            ${describeAssertion}("prop2", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    ${strictEqual("prop2")}
+                });
             });
-            ${itAssertion}(${itMessage("prop3")}, () => {
+            ${describeAssertion}("prop3", () => {
                 this.MyClassTestRunner.runTest(actual.prop3 as any as MyClass, expected.prop3 as any as MyClassTestStructure);
             });
-            ${itAssertion}(${itMessage("prop4")}, () => {
+            ${describeAssertion}("prop4", () => {
                 this.assertions.assertAny(() => {
                     this.MyInterfaceTestRunner.runTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
                 }, () => {
                     this.MyClassTestRunner.runTest(actual.prop4 as any as MyClass, expected.prop4 as any as MyClassTestStructure);
                 });
-                ((actualProperty, expectedProperty) =>{
-                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                ((actualProperty, expectedProperty) => {
+                    ${itAssertion}(${itMessage}, () => {
+                        this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                    });
                 })(actual.prop4, expected.prop4);
             });
-            ${itAssertion}(${itMessage("prop5")}, () => {
-                ((actualProperty, expectedProperty) =>{
-                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
+            ${describeAssertion}("prop5", () => {
+                ((actualProperty, expectedProperty) => {
+                    ${itAssertion}(${itMessage}, () => {
+                        this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                    });
                 })(actual.prop5, expected.prop5);
             });
-            ${itAssertion}(${itMessage("propWithDefaultValue")}, () => {
+            ${describeAssertion}("propWithDefaultValue", () => {
                 let expectedValue = expected.propWithDefaultValue;
                 if (typeof expectedValue === "undefined") {
                     expectedValue = "my default value";
                 }
-                this.assertions.strictEqual(actual.propWithDefaultValue, expectedValue);
+                ${itAssertion}(${itMessage}, () => {
+                    this.assertions.strictEqual(actual.propWithDefaultValue, expectedValue);
+                });
             });
-            ${itAssertion}(${itMessage("propWithOptionalDefinition")}, () => {
+            ${describeAssertion}("propWithOptionalDefinition", () => {
                 this.assertions.assertAny(() => {
-                    this.assertions.strictEqual(actual.propWithOptionalDefinition, undefined);
+                    ${itAssertion}("should be undefined", () => {
+                        this.assertions.strictEqual(actual.propWithOptionalDefinition, undefined);
+                    });
                 }, () => {
                     this.MyClassTestRunner.runTest(actual.propWithOptionalDefinition as any as MyClass, expected.propWithOptionalDefinition as any as MyClassTestStructure);
                 });
@@ -180,8 +192,10 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
 
     runTest(actual: MyClass, expected: MyClassTestStructure) {
         ${describeAssertion}("MyClass", () => {
-            ${itAssertion}(${itMessage("prop")}, () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
+            ${describeAssertion}("prop", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    this.assertions.strictEqual(actual.prop, expected.prop);
+                });
             });
         });
     }
@@ -197,8 +211,10 @@ export class MyInterfaceToTransformTestRunner implements TestRunner<MyInterfaceT
 
     runTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
         ${describeAssertion}("MyInterfaceToTransform", () => {
-            ${itAssertion}(${itMessage("prop")}, () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
+            ${describeAssertion}("prop", () => {
+                ${itAssertion}(${itMessage}, () => {
+                    this.assertions.strictEqual(actual.prop, expected.prop);
+                });
             });
         });
     }

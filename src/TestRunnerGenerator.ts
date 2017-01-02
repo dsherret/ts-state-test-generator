@@ -82,10 +82,6 @@ export class TestRunnerGenerator {
         if (testRunnerClass.constructorDef == null)
             testRunnerClass.setConstructor({});
 
-        const dependencyExists = testRunnerClass.constructorDef.parameters.some(p => p.name === name);
-        if (dependencyExists)
-            return;
-
         testRunnerClass.constructorDef.addParameter({
             name,
             type,
