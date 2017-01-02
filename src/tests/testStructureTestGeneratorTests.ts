@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("getting structures", () => {
@@ -72,63 +72,39 @@ describe(nameof(TestGenerator), () => {
 
         it("should write out the file", () => {
             const expectedCode =
-`export class StateTestRunner {
-    private readonly assertions: WrapperAssertions;
+`export class TestRunnerFactory {
+    ${testRunnerFactoryStartTemplate}
 
-    constructor(assertions: Assertions) {
-        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+    getMyInterfaceTestRunner() {
+        return new MyInterfaceTestRunner(this.assertions);
+    }
+
+    getMyClassTestRunner() {
+        return new MyClassTestRunner(this.assertions);
+    }
+
+    getMyInterfaceToTransformTestRunner() {
+        return new MyInterfaceToTransformTestRunner(this.assertions);
+    }
+}
+
+export class StateTestRunner {
+    constructor(private readonly factory: TestRunnerFactory) {
     }
 
     runMyInterfaceTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
-        this.assertions.describe("MyInterface", () => {
-            this.assertions.it("should have the correct 'prop1' property", () => {
-                this.assertions.strictEqual(actual.prop1, expected.prop1);
-            });
-            this.assertions.it("should have the correct 'prop2' property", () => {
-                this.assertions.strictEqual(actual.prop2, expected.prop2);
-            });
-            this.assertions.it("should have the correct 'prop3' property", () => {
-                this.runMyClassTest(actual.prop3 as any as MyClass, expected.prop3 as any as MyClassTestStructure);
-            });
-            this.assertions.it("should have the correct 'prop4' property", () => {
-                this.assertions.assertAny(() => {
-                    this.runMyInterfaceTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
-                }, () => {
-                    this.runMyClassTest(actual.prop4 as any as MyClass, expected.prop4 as any as MyClassTestStructure);
-                });
-                ((actualProperty, expectedProperty) =>{
-                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
-                })(actual.prop4, expected.prop4);
-            });
-            this.assertions.it("should have the correct 'prop5' property", () => {
-                ((actualProperty, expectedProperty) =>{
-                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
-                })(actual.prop5, expected.prop5);
-            });
-            this.assertions.it("should have the correct 'propWithOptionalDefinition' property", () => {
-                this.assertions.assertAny(() => {
-                    this.assertions.strictEqual(actual.propWithOptionalDefinition, undefined);
-                }, () => {
-                    this.runMyClassTest(actual.propWithOptionalDefinition as any as MyClass, expected.propWithOptionalDefinition as any as MyClassTestStructure);
-                });
-            });
-        });
+        const testRunner = this.factory.getMyInterfaceTestRunner();
+        testRunner.runTest(actual, expected);
     }
 
     runMyClassTest(actual: MyClass, expected: MyClassTestStructure) {
-        this.assertions.describe("MyClass", () => {
-            this.assertions.it("should have the correct 'prop' property", () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
-            });
-        });
+        const testRunner = this.factory.getMyClassTestRunner();
+        testRunner.runTest(actual, expected);
     }
 
     runMyInterfaceToTransformTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
-        this.assertions.describe("MyInterfaceToTransform", () => {
-            this.assertions.it("should have the correct 'prop' property", () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
-            });
-        });
+        const testRunner = this.factory.getMyInterfaceToTransformTestRunner();
+        testRunner.runTest(actual, expected);
     }
 }
 
@@ -141,12 +117,79 @@ export interface MyInterfaceTestStructure {
     propWithOptionalDefinition?: MyClassTestStructure;
 }
 
+export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfaceTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    runTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
+        ${describeAssertion}("MyInterface", () => {
+            ${itAssertion}(${itMessage("prop1")}, () => {
+                ${strictEqual("prop1")}
+            });
+            ${itAssertion}(${itMessage("prop2")}, () => {
+                ${strictEqual("prop2")}
+            });
+            ${itAssertion}(${itMessage("prop3")}, () => {
+                this.MyClassTestRunner.runTest(actual.prop3 as any as MyClass, expected.prop3 as any as MyClassTestStructure);
+            });
+            ${itAssertion}(${itMessage("prop4")}, () => {
+                this.assertions.assertAny(() => {
+                    this.MyInterfaceTestRunner.runTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
+                }, () => {
+                    this.MyClassTestRunner.runTest(actual.prop4 as any as MyClass, expected.prop4 as any as MyClassTestStructure);
+                });
+                ((actualProperty, expectedProperty) =>{
+                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                })(actual.prop4, expected.prop4);
+            });
+            ${itAssertion}(${itMessage("prop5")}, () => {
+                ((actualProperty, expectedProperty) =>{
+                    this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                })(actual.prop5, expected.prop5);
+            });
+            ${itAssertion}(${itMessage("propWithOptionalDefinition")}, () => {
+                this.assertions.assertAny(() => {
+                    this.assertions.strictEqual(actual.propWithOptionalDefinition, undefined);
+                }, () => {
+                    this.MyClassTestRunner.runTest(actual.propWithOptionalDefinition as any as MyClass, expected.propWithOptionalDefinition as any as MyClassTestStructure);
+                });
+            });
+        });
+    }
+}
+
 export interface MyClassTestStructure {
     prop: string;
 }
 
+export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    runTest(actual: MyClass, expected: MyClassTestStructure) {
+        ${describeAssertion}("MyClass", () => {
+            ${itAssertion}(${itMessage("prop")}, () => {
+                this.assertions.strictEqual(actual.prop, expected.prop);
+            });
+        });
+    }
+}
+
 export interface MyInterfaceToTransformTestStructure {
     prop: number;
+}
+
+export class MyInterfaceToTransformTestRunner implements TestRunner<MyInterfaceToTransform, MyInterfaceToTransformTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    runTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
+        ${describeAssertion}("MyInterfaceToTransform", () => {
+            ${itAssertion}(${itMessage("prop")}, () => {
+                this.assertions.strictEqual(actual.prop, expected.prop);
+            });
+        });
+    }
 }`;
             expect(structuresFile.write()).to.equal(fileTemplate(expectedCode));
         });

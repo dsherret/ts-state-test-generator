@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("type parameter tests", () => {
@@ -51,18 +51,11 @@ describe(nameof(TestGenerator), () => {
         it("should write out the file", () => {
             const expectedCode =
 `export class TestRunnerFactory {
-    private readonly assertions: WrapperAssertions;
-
-    constructor(assertions?: Assertions) {
-        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
-    }
-
-    getStrictEqualTestRunner() {
-        return new StrictEqualTestRunner(this.assertions);
-    }
+    ${testRunnerFactoryStartTemplate}
 
     getMyExtendsClassTestRunner() {
-        return new MyExtendsClassTestRunner(this.assertions);
+        return new MyExtendsClassTestRunner(this.assertions, this.getMyTypeParameterClassTestRunner(\
+this.getStrictEqualTestRunner(), this.getMyClassTestRunner(this.getStrictEqualTestRunner())));
     }
 
     getMyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>\
@@ -110,7 +103,7 @@ MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
         this.assertions.describe("MyExtendsClass", () => {
             this.MyTypeParameterClassTestRunner.runTest(actual, expected);
             this.assertions.it("should have the correct 'extendsProp' property", () => {
-                this.assertions.strictEqual(actual.extendsProp, expected.extendsProp);
+                ${strictEqual("extendsProp")}
             });
         });
     }

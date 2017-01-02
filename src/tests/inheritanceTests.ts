@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("inheritance tests", () => {
@@ -26,34 +26,39 @@ describe(nameof(TestGenerator), () => {
 
         it("should write out the file", () => {
             const expectedCode =
-`export class StateTestRunner {
-    private readonly assertions: WrapperAssertions;
+`export class TestRunnerFactory {
+    ${testRunnerFactoryStartTemplate}
 
-    constructor(assertions: Assertions) {
-        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+    getMyExtendsClassTestRunner() {
+        return new MyExtendsClassTestRunner(this.assertions, this.getMyBaseClassTestRunner());
+    }
+
+    getMyOtherExtendsClassTestRunner() {
+        return new MyOtherExtendsClassTestRunner(this.assertions, this.getMyBaseClassTestRunner());
+    }
+
+    getMyBaseClassTestRunner() {
+        return new MyBaseClassTestRunner(this.assertions);
+    }
+}
+
+export class StateTestRunner {
+    constructor(private readonly factory: TestRunnerFactory) {
     }
 
     runMyExtendsClassTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
-        this.assertions.describe("MyExtendsClass", () => {
-            this.runMyBaseClassTest(actual as any as MyBaseClass, expected);
-            this.assertions.it("should have the correct 'extendsProp' property", () => {
-                this.assertions.strictEqual(actual.extendsProp, expected.extendsProp);
-            });
-        });
+        const testRunner = this.factory.getMyExtendsClassTestRunner();
+        testRunner.runTest(actual, expected);
     }
 
     runMyOtherExtendsClassTest(actual: MyOtherExtendsClass, expected: MyOtherExtendsClassTestStructure) {
-        this.assertions.describe("MyOtherExtendsClass", () => {
-            this.runMyBaseClassTest(actual as any as MyBaseClass, expected);
-        });
+        const testRunner = this.factory.getMyOtherExtendsClassTestRunner();
+        testRunner.runTest(actual, expected);
     }
 
     runMyBaseClassTest(actual: MyBaseClass, expected: MyBaseClassTestStructure) {
-        this.assertions.describe("MyBaseClass", () => {
-            this.assertions.it("should have the correct 'prop' property", () => {
-                this.assertions.strictEqual(actual.prop, expected.prop);
-            });
-        });
+        const testRunner = this.factory.getMyBaseClassTestRunner();
+        testRunner.runTest(actual, expected);
     }
 }
 
@@ -61,11 +66,49 @@ export interface MyExtendsClassTestStructure extends MyBaseClassTestStructure {
     extendsProp: string;
 }
 
+export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyExtendsClassTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly MyBaseClassTestRunner: TestRunner<MyBaseClass, MyBaseClassTestStructure>) {
+    }
+
+    runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
+        ${describeAssertion}("MyExtendsClass", () => {
+            this.MyBaseClassTestRunner.runTest(actual, expected);
+            ${itAssertion}(${itMessage("extendsProp")}, () => {
+                ${strictEqual("extendsProp")}
+            });
+        });
+    }
+}
+
 export interface MyOtherExtendsClassTestStructure extends MyBaseClassTestStructure {
+}
+
+export class MyOtherExtendsClassTestRunner implements TestRunner<MyOtherExtendsClass, MyOtherExtendsClassTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions, private readonly MyBaseClassTestRunner: TestRunner<MyBaseClass, MyBaseClassTestStructure>) {
+    }
+
+    runTest(actual: MyOtherExtendsClass, expected: MyOtherExtendsClassTestStructure) {
+        ${describeAssertion}("MyOtherExtendsClass", () => {
+            this.MyBaseClassTestRunner.runTest(actual, expected);
+        });
+    }
 }
 
 export interface MyBaseClassTestStructure {
     prop: Date;
+}
+
+export class MyBaseClassTestRunner implements TestRunner<MyBaseClass, MyBaseClassTestStructure> {
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    runTest(actual: MyBaseClass, expected: MyBaseClassTestStructure) {
+        ${describeAssertion}("MyBaseClass", () => {
+            ${itAssertion}(${itMessage("prop")}, () => {
+                ${strictEqual("prop")}
+            });
+        });
+    }
 }`;
             expect(structuresFile.write()).to.equal(fileTemplate(expectedCode));
         });

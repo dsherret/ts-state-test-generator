@@ -22,7 +22,7 @@ export class WrapperFactory {
 
         const wrapper = new StructureWrapper(this, this.transformOptions, definition);
         this.structureWrappers.push({
-            wrapper: wrapper,
+            wrapper,
             definition
         });
 

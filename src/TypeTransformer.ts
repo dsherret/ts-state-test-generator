@@ -1,5 +1,4 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TransformOptions} from "./TransformOptions";
 import {StructureTypeWrapper} from "./wrappers";
 
 type ClassOrInterfacePropertyType = typeInfo.InterfacePropertyDefinition | typeInfo.ClassPropertyDefinition;

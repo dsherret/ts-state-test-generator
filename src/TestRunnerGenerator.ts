@@ -87,8 +87,8 @@ export class TestRunnerGenerator {
             return;
 
         testRunnerClass.constructorDef.addParameter({
-            name: name,
-            type: type,
+            name,
+            type,
             isReadonly: true,
             scope: typeInfo.ClassConstructorParameterScope.Private
         });

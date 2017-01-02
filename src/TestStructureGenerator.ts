@@ -1,6 +1,4 @@
-﻿import CodeBlockWriter from "code-block-writer";
-import * as typeInfo from "ts-type-info";
-import {TransformOptions} from "./TransformOptions";
+﻿import * as typeInfo from "ts-type-info";
 import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper} from "./wrappers";
 

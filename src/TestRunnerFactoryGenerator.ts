@@ -1,10 +1,6 @@
 ﻿import * as typeInfo from "ts-type-info";
-import CodeBlockWriter from "code-block-writer";
 import {TransformOptions} from "./TransformOptions";
-import {TestFunctionBodyWriter} from "./TestFunctionBodyWriter";
-import {TestStructureGenerator} from "./TestStructureGenerator";
-import {TypeTransformer} from "./TypeTransformer";
-import {StructureWrapper} from "./wrappers";
+import {StructureWrapper, StructureTypeWrapper} from "./wrappers";
 
 export class TestRunnerFactoryGenerator {
     constructor(private readonly transformOptions: TransformOptions) {
@@ -41,12 +37,35 @@ export class TestRunnerFactoryGenerator {
 
         for (const structure of structures) {
             const typeParameters = structure.getTypeParameters();
+            const extendsTypes = structure.getValidExtendsTypes();
             const method = testRunnerFactory.addMethod({
                 name: `get${structure.getName()}TestRunner`,
                 onWriteFunctionBody: methodWriter => {
                     methodWriter.write(`return new ${structure.getName()}TestRunner(this.assertions`);
                     typeParameters.forEach(typeParam => {
-                        methodWriter.write(`, ${typeParam.getName()}TestRunner`);
+                        const testRunnerName = `${typeParam.getName()}TestRunner`;
+                        methodWriter.write(`, ${testRunnerName}`);
+                    });
+
+                    function writeType(typeDef: StructureTypeWrapper) {
+                        const validExtendsDefs = typeDef.getImmediateValidDefinitions();
+                        if (validExtendsDefs.length === 0)
+                            methodWriter.write(`this.getStrictEqualTestRunner()`);
+                        else {
+                            const typeArgs = typeDef.getTypeArguments();
+                            const testRunnerName = `${validExtendsDefs[0].getName()}TestRunner`;
+                            methodWriter.write(`this.get${testRunnerName}(`);
+                            typeArgs.forEach((typeArg, i) => {
+                                methodWriter.conditionalWrite(i !== 0, ", ");
+                                writeType(typeArg);
+                            });
+                            methodWriter.write(`)`);
+                        }
+                    }
+
+                    extendsTypes.forEach(extendsType => {
+                        methodWriter.write(", ");
+                        writeType(extendsType);
                     });
                     methodWriter.write(");");
                 }

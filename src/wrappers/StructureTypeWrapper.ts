@@ -54,6 +54,10 @@ export class StructureTypeWrapper {
         return this.getNameWithTypeParametersInternal(validDefs[0].getTestStructureName(), structureType => structureType.getTestStructureName());
     }
 
+    getTypeArguments() {
+        return this.typeDef.typeArguments.map(t => this.wrapperFactory.getStructureType(t));
+    }
+
     private getNameWithTypeParametersInternal(
         name: string,
         getTypeName: (structureType: StructureTypeWrapper) => string

@@ -1,6 +1,4 @@
-﻿import * as typeInfo from "ts-type-info";
-import CodeBlockWriter from "code-block-writer";
-import {StructureWrapper} from "./wrappers";
+﻿import {StructureWrapper} from "./wrappers";
 
 export class StructureDependencyGetter {
     getAllStructures(structures: StructureWrapper[]) {

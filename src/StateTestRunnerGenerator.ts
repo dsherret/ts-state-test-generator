@@ -1,9 +1,5 @@
 ﻿import * as typeInfo from "ts-type-info";
-import CodeBlockWriter from "code-block-writer";
 import {TransformOptions} from "./TransformOptions";
-import {TestFunctionBodyWriter} from "./TestFunctionBodyWriter";
-import {TestStructureGenerator} from "./TestStructureGenerator";
-import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper} from "./wrappers";
 
 export class StateTestRunnerGenerator {
