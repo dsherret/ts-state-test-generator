@@ -61,16 +61,16 @@ export class TestRunnerGenerator {
             });
             // add constructor dependencies
             structure.getConstructorDependencies().forEach(dep => {
-                if (dep instanceof StructureWrapper) {
-                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`,
-                        `TestRunner<${dep.getNameWithTypeParameters()}, ${dep.getTestStructureNameWithTypeParameters()}>`);
+                if (dep instanceof StructureTypeParameterWrapper) {
+                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`, `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
                 }
                 else if (dep instanceof StructureTypeWrapper) {
                     this.addConstructorDependency(testRunnerClass, `${dep.getImmediateValidDefinitions()[0].getName()}TestRunner`,
                         `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
                 }
-                else if (dep instanceof StructureTypeParameterWrapper) {
-                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`, `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                else if (dep instanceof StructureWrapper) {
+                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`,
+                        `TestRunner<${dep.getNameWithTypeParameters()}, ${dep.getTestStructureNameWithTypeParameters()}>`);
                 }
             });
 

@@ -121,7 +121,9 @@ export class TestFunctionBodyWriter {
 
             writer.write(`for (let i = 0; i < (${expectedName} || []).length; i++)`).block(() => {
                 writer.write("this.assertions.describe(`index ${i}`, () => ").inlineBlock(() => {
-                    this.writeTypeTest(structure, structureType.getArrayType()!, writer, `${actualName}[i]`, `${expectedName}[i]`);
+                    writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
+                        this.writeTypeTest(structure, structureType.getArrayType()!, writer, `actualValue`, `expectedValue`);
+                    }).write(`)(${actualName}[i], ${expectedName}[i]);`);
                 }).write(");");
             });
         }

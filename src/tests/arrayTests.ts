@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {expect} from "chai";
 import {TestGenerator} from "./../TestGenerator";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("array tests", () => {
@@ -68,9 +68,11 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
                 });
                 for (let i = 0; i < (expected.prop || []).length; i++) {
                     ${describeAssertion}(\`index \${i}\`, () => {
-                        ${itAssertion}(${itMessage}, () => {
-                            ${strictEqual("prop[i]")}
-                        });
+                        ((actualValue, expectedValue) => {
+                            ${itAssertion}(${itMessage}, () => {
+                                this.assertions.strictEqual(actualValue, expectedValue);
+                            });
+                        })(actual.prop[i], expected.prop[i]);
                     });
                 }
             });
@@ -79,21 +81,25 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
                     this.assertions.strictEqual(actual.prop2.length, expected.prop2.length);
                 });
                 for (let i = 0; i < (expected.prop2 || []).length; i++) {
-                    this.assertions.describe(\`index \${i}\`, () => {
-                        this.assertions.assertAny(() => {
-                            this.assertions.it("should have the same length", () => {
-                                this.assertions.strictEqual(actual.prop2[i].length, expected.prop2[i].length);
-                            });
-                            for (let i = 0; i < (expected.prop2[i] || []).length; i++) {
-                                this.assertions.describe(\`index \${i}\`, () => {
-                                    this.assertions.it("should have the same value", () => {
-                                        this.assertions.strictEqual(actual.prop2[i][i], expected.prop2[i][i]);
-                                    });
+                    ${describeAssertion}(\`index \${i}\`, () => {
+                        ((actualValue, expectedValue) => {
+                            this.assertions.assertAny(() => {
+                                ${itAssertion}("should have the same length", () => {
+                                    this.assertions.strictEqual(actualValue.length, expectedValue.length);
                                 });
-                            }
-                        }, () => {
-                            this.runTest(actual.prop2[i] as any as MyClass, expected.prop2[i] as any as MyClassTestStructure);
-                        });
+                                for (let i = 0; i < (expectedValue || []).length; i++) {
+                                    ${describeAssertion}(\`index \${i}\`, () => {
+                                        ((actualValue, expectedValue) => {
+                                            ${itAssertion}("should have the same value", () => {
+                                                this.assertions.strictEqual(actualValue, expectedValue);
+                                            });
+                                        })(actualValue[i], expectedValue[i]);
+                                    });
+                                }
+                            }, () => {
+                                this.runTest(actualValue as any as MyClass, expectedValue as any as MyClassTestStructure);
+                            });
+                        })(actual.prop2[i], expected.prop2[i]);
                     });
                 }
             });

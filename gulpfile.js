@@ -18,7 +18,6 @@ gulp.task("typescript", ["clean-scripts"], function() {
         .pipe(sourcemaps.init())
         .pipe(tsNameOf())
         .pipe(ts(tsProject))
-        .pipe(replace(/(}\)\()(.*\|\|.*;)/g, '$1/* istanbul ignore next */$2'))
         .pipe(replace(/(var __extends = \(this && this.__extends\))/g, '$1/* istanbul ignore next */'))
         .pipe(replace(/(if \(!exports.hasOwnProperty\(p\)\))/g, '/* istanbul ignore else */ $1'))
         // ignore empty constructors (for mixins and static classes)
