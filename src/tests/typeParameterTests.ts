@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("type parameter tests", () => {
@@ -101,6 +101,7 @@ MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
 
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
         ${describeAssertion}("MyExtendsClass", () => {
+            ${nullAssertion(3)}
             this.MyTypeParameterClassTestRunner.runTest(actual, expected);
             ${describeAssertion}("extendsProp", () => {
                 ${itAssertion}(${itMessage}, () => {
@@ -124,6 +125,7 @@ private readonly UTestRunner: TestRunner<U, UExpected>) {
 
     runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
         ${describeAssertion}("MyTypeParameterClass", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 this.TTestRunner.runTest(actual.prop, expected.prop);
             });
@@ -144,6 +146,7 @@ export class MyClassTestRunner<T, TExpected> implements TestRunner<MyClass<T>, M
 
     runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {
         ${describeAssertion}("MyClass", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 this.TTestRunner.runTest(actual.prop, expected.prop);
             });

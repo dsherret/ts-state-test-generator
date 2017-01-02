@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {expect} from "chai";
 import {TestGenerator} from "./../TestGenerator";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("array tests", () => {
@@ -62,6 +62,7 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
 
     runTest(actual: MyClass, expected: MyClassTestStructure) {
         ${describeAssertion}("MyClass", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 ${itAssertion}("should have the same length", () => {
                     this.assertions.strictEqual(actual.prop.length, expected.prop.length);

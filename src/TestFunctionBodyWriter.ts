@@ -8,6 +8,7 @@ export class TestFunctionBodyWriter {
 
     writeForStructure(structure: StructureWrapper, writer: CodeBlockWriter) {
         writer.write(`this.assertions.describe("${structure.getName()}", () => `).inlineBlock(() => {
+            this.writeNullCheck(writer);
             structure.getValidExtendsStructures().forEach(extendsStructure => {
                 this.writeExtends(extendsStructure, writer);
             });
@@ -16,6 +17,15 @@ export class TestFunctionBodyWriter {
                 this.writeTestForProperty(structure, prop, writer);
             });
         }).write(");").newLine();
+    }
+
+    private writeNullCheck(writer: CodeBlockWriter) {
+        writer.write("if (actual == null && expected != null)").block(() => {
+            writer.write(`this.assertions.it("should not be null", () => `).inlineBlock(() => {
+                writer.write(`throw new Error("It's null");`);
+            }).write(");").newLine();
+            writer.writeLine("return;");
+        });
     }
 
     private writeExtends(extendsStructure: StructureWrapper, writer: CodeBlockWriter) {

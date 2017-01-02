@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {expect} from "chai";
 import {TestGenerator} from "./../TestGenerator";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("inheritance tests", () => {
@@ -72,6 +72,7 @@ export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyEx
 
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
         ${describeAssertion}("MyExtendsClass", () => {
+            ${nullAssertion(3)}
             this.MyBaseClassTestRunner.runTest(actual, expected);
             ${describeAssertion}("extendsProp", () => {
                 ${itAssertion}(${itMessage}, () => {
@@ -91,6 +92,7 @@ export class MyOtherExtendsClassTestRunner implements TestRunner<MyOtherExtendsC
 
     runTest(actual: MyOtherExtendsClass, expected: MyOtherExtendsClassTestStructure) {
         ${describeAssertion}("MyOtherExtendsClass", () => {
+            ${nullAssertion(3)}
             this.MyBaseClassTestRunner.runTest(actual, expected);
         });
     }
@@ -106,6 +108,7 @@ export class MyBaseClassTestRunner implements TestRunner<MyBaseClass, MyBaseClas
 
     runTest(actual: MyBaseClass, expected: MyBaseClassTestStructure) {
         ${describeAssertion}("MyBaseClass", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 ${itAssertion}(${itMessage}, () => {
                     ${strictEqual("prop")}

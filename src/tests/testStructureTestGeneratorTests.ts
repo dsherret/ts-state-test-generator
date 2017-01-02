@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TestGenerator} from "../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("getting structures", () => {
@@ -129,6 +129,7 @@ private readonly MyInterfaceToTransformTestRunner: TestRunner<MyInterfaceToTrans
 
     runTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
         ${describeAssertion}("MyInterface", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop1", () => {
                 ${itAssertion}(${itMessage}, () => {
                     ${strictEqual("prop1")}
@@ -193,6 +194,7 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
 
     runTest(actual: MyClass, expected: MyClassTestStructure) {
         ${describeAssertion}("MyClass", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 ${itAssertion}(${itMessage}, () => {
                     this.assertions.strictEqual(actual.prop, expected.prop);
@@ -212,6 +214,7 @@ export class MyInterfaceToTransformTestRunner implements TestRunner<MyInterfaceT
 
     runTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
         ${describeAssertion}("MyInterfaceToTransform", () => {
+            ${nullAssertion(3)}
             ${describeAssertion}("prop", () => {
                 ${itAssertion}(${itMessage}, () => {
                     this.assertions.strictEqual(actual.prop, expected.prop);
