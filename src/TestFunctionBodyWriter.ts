@@ -46,18 +46,6 @@ export class TestFunctionBodyWriter {
         structureType: StructureTypeWrapper,
         writer: CodeBlockWriter
     ) {
-        const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
-        if (matchedTypeTransforms.length > 0) {
-            writer.write("((actualProperty, expectedProperty) => ").inlineBlock(() => {
-                writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
-                    matchedTypeTransforms.forEach(typeTransform => {
-                        typeTransform.testWrite(writer);
-                    });
-                }).write(");");
-            }).write(`)(actual.${prop.getName()}, expected.${prop.getName()});`).newLine();
-            return;
-        }
-
         const matchedDefaultValueTransforms = this.transformOptions.getDefaultValueTransforms().filter(t => t.condition(prop.getDefinition(), structure.getDefinition()));
         if (matchedDefaultValueTransforms.length > 0) {
             writer.writeLine(`let expectedValue = expected.${prop.getName()};`);
@@ -70,6 +58,28 @@ export class TestFunctionBodyWriter {
             return;
         }
 
+        this.writeTypeTest(structure, structureType, writer, `actual.${prop.getName()}`, `expected.${prop.getName()}`);
+    }
+
+    private writeTypeTest(
+        structure: StructureWrapper,
+        structureType: StructureTypeWrapper,
+        writer: CodeBlockWriter,
+        actualName: string,
+        expectedName: string
+    ) {
+        const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
+        if (matchedTypeTransforms.length > 0) {
+            writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
+                writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                    matchedTypeTransforms.forEach(typeTransform => {
+                        typeTransform.testWrite(writer);
+                    });
+                }).write(");");
+            }).write(`)(${actualName}, ${expectedName});`).newLine();
+            return;
+        }
+
         const unionTypes = structureType.getUnionTypes();
         const intersectionTypes = structureType.getIntersectionTypes();
         if (unionTypes.length > 0) {
@@ -77,22 +87,22 @@ export class TestFunctionBodyWriter {
             unionTypes.forEach((subType, i) => {
                 writer.conditionalWrite(i !== 0, ", ");
                 writer.write("() => ").inlineBlock(() => {
-                    this.writePropertyTypeTest(structure, prop, subType, writer);
+                    this.writeTypeTest(structure, subType, writer, actualName, expectedName);
                 });
             });
             writer.write(");").newLine();
         }
         else if (intersectionTypes.length > 0) {
             intersectionTypes.forEach(subType => {
-                this.writePropertyTypeTest(structure, prop, subType, writer);
+                this.writeTypeTest(structure, subType, writer, actualName, expectedName);
             });
         }
         else {
-            this.writeTypeTest(structure, structureType, writer, `actual.${prop.getName()}`, `expected.${prop.getName()}`);
+            this.writeNonUnionAndIntersectionTypeTest(structure, structureType, writer, actualName, expectedName);
         }
     }
 
-    private writeTypeTest(
+    private writeNonUnionAndIntersectionTypeTest(
         structure: StructureWrapper,
         structureType: StructureTypeWrapper,
         writer: CodeBlockWriter,
@@ -117,11 +127,15 @@ export class TestFunctionBodyWriter {
         }
         else if (isTypeParameterType)
             writer.writeLine(`this.${structureType.getText()}TestRunner.runTest(${actualName}, ${expectedName});`);
-        else if (hasValidDefinition)
-            writer.writeLine(`this.${validDefinitions[0].getName()}TestRunner.runTest(` +
+        else if (hasValidDefinition) {
+            const isSameClass = validDefinitions[0].getName() === structure.getName();
+            const runTestMethodName = isSameClass ? "runTest" : `${validDefinitions[0].getName()}TestRunner.runTest`;
+
+            writer.writeLine(`this.${runTestMethodName}(` +
                 `${actualName} as any as ${validDefinitions[0].getName()}, ` +
                 `${expectedName} as any as ${this.transformOptions
                 .getNameToTestStructureName(validDefinitions[0].getName())});`);
+        }
         else {
             writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
                 writer.writeLine(`this.assertions.strictEqual(${actualName}, ${expectedName});`);

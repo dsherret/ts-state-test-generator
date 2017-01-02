@@ -7,8 +7,26 @@ describe(nameof(TestGenerator), () => {
     describe("array tests", () => {
         const myClass = typeInfo.createClass({
             name: "MyClass",
-            properties: [{ name: "prop", type: "string[]" }]
+            properties: [
+                { name: "prop", type: "string[]" },
+                { name: "prop2", type: "any" }
+            ]
         });
+        const prop2 = myClass.getProperty("prop2")!;
+        const numberType = new typeInfo.TypeDefinition();
+        numberType.text = "number";
+        const numberArrayType = new typeInfo.TypeDefinition();
+        numberArrayType.text = "number[]";
+        numberArrayType.arrayElementType = numberType;
+        const myClassType = new typeInfo.TypeDefinition();
+        myClassType.text = "MyClass";
+        myClassType.definitions.push(myClass);
+        const propArrayElementType = new typeInfo.TypeDefinition();
+        propArrayElementType.text = "number[] | MyClass";
+        propArrayElementType.unionTypes.push(numberArrayType);
+        propArrayElementType.unionTypes.push(myClassType);
+        prop2.type.arrayElementType = propArrayElementType;
+        prop2.type.text = "(number[] | MyClass)[]";
 
         const generator = new TestGenerator({});
         const structuresFile = generator.getTestFile([myClass]);
@@ -35,6 +53,7 @@ export class StateTestRunner {
 
 export interface MyClassTestStructure {
     prop: string[];
+    prop2: (number[] | MyClassTestStructure)[];
 }
 
 export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructure> {
@@ -51,6 +70,29 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
                     ${describeAssertion}(\`index \${i}\`, () => {
                         ${itAssertion}(${itMessage}, () => {
                             ${strictEqual("prop[i]")}
+                        });
+                    });
+                }
+            });
+            ${describeAssertion}("prop2", () => {
+                this.assertions.it("should have the same length", () => {
+                    this.assertions.strictEqual(actual.prop2.length, expected.prop2.length);
+                });
+                for (let i = 0; i < (expected.prop2 || []).length; i++) {
+                    this.assertions.describe(\`index \${i}\`, () => {
+                        this.assertions.assertAny(() => {
+                            this.assertions.it("should have the same length", () => {
+                                this.assertions.strictEqual(actual.prop2[i].length, expected.prop2[i].length);
+                            });
+                            for (let i = 0; i < (expected.prop2[i] || []).length; i++) {
+                                this.assertions.describe(\`index \${i}\`, () => {
+                                    this.assertions.it("should have the same value", () => {
+                                        this.assertions.strictEqual(actual.prop2[i][i], expected.prop2[i][i]);
+                                    });
+                                });
+                            }
+                        }, () => {
+                            this.runTest(actual.prop2[i] as any as MyClass, expected.prop2[i] as any as MyClassTestStructure);
                         });
                     });
                 }

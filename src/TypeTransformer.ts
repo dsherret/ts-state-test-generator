@@ -33,6 +33,11 @@ export class TypeTransformer {
 
             newTypeDef.text = `(${newTypeDef.intersectionTypes.map(t => t.text).join(" & ")})`;
         }
+        else if (structureType.getIsArrayType()) {
+            const arraySubType = this.getNewType(structureType.getArrayType()!);
+            newTypeDef.arrayElementType = arraySubType;
+            newTypeDef.text = `${arraySubType.text}[]`;
+        }
         else {
             newTypeDef.text = structureType.getTestStructureName();
         }

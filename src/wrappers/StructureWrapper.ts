@@ -65,6 +65,47 @@ export class StructureWrapper {
         return this.getNameWithTypeParametersInternal(this.getTestStructureName(), t => t.getTestStructureName());
     }
 
+    getConstructorDependencies(): (StructureTypeWrapper | StructureWrapper | StructureTypeParameterWrapper)[] {
+        const typeParams = this.getTypeParameters();
+        const extendsTypes = this.getValidExtendsTypes();
+        const propDependencies = this.getPropertyDependencies();
+        const dependencies: ({ name: string; dep: (StructureTypeWrapper | StructureWrapper | StructureTypeParameterWrapper); })[] = [];
+        const structureName = this.getName();
+
+        function addToDependency(name: string, dep: StructureTypeWrapper | StructureWrapper | StructureTypeParameterWrapper) {
+            if (name === structureName || dependencies.some(d => d.name === name))
+                return;
+            dependencies.push({ name, dep });
+        }
+
+        typeParams.forEach(typeParam => {
+            addToDependency(typeParam.getName(), typeParam);
+        });
+        extendsTypes.forEach(extendsType => {
+            addToDependency(extendsType.getImmediateValidDefinitions()[0].getName(), extendsType);
+        });
+        propDependencies.forEach(dep => {
+            addToDependency(dep.getName(), dep);
+        });
+
+        return dependencies.map(d => d.dep);
+    }
+
+    private getPropertyDependencies() {
+        const props = this.structure.properties as ClassOrInterfacePropertyType[];
+        const dependencies: ClassOrInterfaceType[] = [];
+        props.forEach(prop => {
+            prop.type.getAllDefinitions().forEach(def => {
+                if (!(def instanceof typeInfo.ClassDefinition || def instanceof typeInfo.InterfaceDefinition))
+                    return;
+
+                if (dependencies.indexOf(def) === -1)
+                    dependencies.push(def);
+            });
+        });
+        return dependencies.map(d => this.wrapperFactory.getStructure(d));
+    }
+
     private getNameWithTypeParametersInternal(
         name: string,
         getTypeParamName: (typeParam: StructureTypeParameterWrapper) => string

@@ -4,7 +4,7 @@ import {TransformOptions} from "./TransformOptions";
 import {TestFunctionBodyWriter} from "./TestFunctionBodyWriter";
 import {TestStructureGenerator} from "./TestStructureGenerator";
 import {TypeTransformer} from "./TypeTransformer";
-import {StructureWrapper} from "./wrappers";
+import {StructureWrapper, StructureTypeWrapper, StructureTypeParameterWrapper} from "./wrappers";
 
 export class TestRunnerGenerator {
     private readonly testStructureGenerator: TestStructureGenerator;
@@ -59,15 +59,19 @@ export class TestRunnerGenerator {
                     constraintType: constraintType == null ? undefined : constraintType.getTestStructureName()
                 });
             });
-            // add constructor parameters for type parameters
-            typeParameters.forEach(typeParam => {
-                this.addConstructorDependency(testRunnerClass, `${typeParam.getName()}TestRunner`, `TestRunner<${typeParam.getName()}, ${typeParam.getTestStructureName()}>`);
-            });
-            // add constructor parameters for extends type
-            const validExtendsTypes = structure.getValidExtendsTypes();
-            validExtendsTypes.forEach(extendsType => {
-                this.addConstructorDependency(testRunnerClass, `${extendsType.getImmediateValidDefinitions()[0].getName()}TestRunner`,
-                    `TestRunner<${extendsType.getName()}, ${extendsType.getTestStructureName()}>`);
+            // add constructor dependencies
+            structure.getConstructorDependencies().forEach(dep => {
+                if (dep instanceof StructureWrapper) {
+                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`,
+                        `TestRunner<${dep.getNameWithTypeParameters()}, ${dep.getTestStructureNameWithTypeParameters()}>`);
+                }
+                else if (dep instanceof StructureTypeWrapper) {
+                    this.addConstructorDependency(testRunnerClass, `${dep.getImmediateValidDefinitions()[0].getName()}TestRunner`,
+                        `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                }
+                else if (dep instanceof StructureTypeParameterWrapper) {
+                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`, `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                }
             });
 
             testMethod.onWriteFunctionBody = methodBodyWriter => {

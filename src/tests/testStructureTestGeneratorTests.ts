@@ -70,7 +70,7 @@ describe(nameof(TestGenerator), () => {
         generator.addTypeTransform(
             typeDef => typeDef.text === "MyInterfaceToTransform",
             newTypeDef => newTypeDef.text = "string",
-            writer => writer.writeLine(`this.assertions.strictEqual(actualProperty.text, expectedProperty);`));
+            writer => writer.writeLine(`this.assertions.strictEqual(actualValue.text, expectedValue);`));
         generator.addDefaultValue(prop => prop.name === "propWithDefaultValue", `"my default value"`);
         const structuresFile = generator.getTestFile([myInterfaceDef]);
 
@@ -80,7 +80,7 @@ describe(nameof(TestGenerator), () => {
     ${testRunnerFactoryStartTemplate}
 
     getMyInterfaceTestRunner() {
-        return new MyInterfaceTestRunner(this.assertions);
+        return new MyInterfaceTestRunner(this.assertions, this.getMyClassTestRunner(), this.getMyInterfaceToTransformTestRunner());
     }
 
     getMyClassTestRunner() {
@@ -123,7 +123,8 @@ export interface MyInterfaceTestStructure {
 }
 
 export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfaceTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions) {
+    constructor(private readonly assertions: WrapperAssertions, private readonly MyClassTestRunner: TestRunner<MyClass, MyClassTestStructure>, \
+private readonly MyInterfaceToTransformTestRunner: TestRunner<MyInterfaceToTransform, MyInterfaceToTransformTestStructure>) {
     }
 
     runTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
@@ -143,20 +144,20 @@ export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfac
             });
             ${describeAssertion}("prop4", () => {
                 this.assertions.assertAny(() => {
-                    this.MyInterfaceTestRunner.runTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
+                    this.runTest(actual.prop4 as any as MyInterface, expected.prop4 as any as MyInterfaceTestStructure);
                 }, () => {
                     this.MyClassTestRunner.runTest(actual.prop4 as any as MyClass, expected.prop4 as any as MyClassTestStructure);
                 });
-                ((actualProperty, expectedProperty) => {
+                ((actualValue, expectedValue) => {
                     ${itAssertion}(${itMessage}, () => {
-                        this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                        this.assertions.strictEqual(actualValue.text, expectedValue);
                     });
                 })(actual.prop4, expected.prop4);
             });
             ${describeAssertion}("prop5", () => {
-                ((actualProperty, expectedProperty) => {
+                ((actualValue, expectedValue) => {
                     ${itAssertion}(${itMessage}, () => {
-                        this.assertions.strictEqual(actualProperty.text, expectedProperty);
+                        this.assertions.strictEqual(actualValue.text, expectedValue);
                     });
                 })(actual.prop5, expected.prop5);
             });

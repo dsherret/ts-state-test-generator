@@ -1,6 +1,6 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TransformOptions} from "./TransformOptions";
-import {StructureWrapper, StructureTypeWrapper} from "./wrappers";
+import {StructureWrapper, StructureTypeWrapper, StructureTypeParameterWrapper} from "./wrappers";
 
 export class TestRunnerFactoryGenerator {
     constructor(private readonly transformOptions: TransformOptions) {
@@ -37,15 +37,10 @@ export class TestRunnerFactoryGenerator {
 
         for (const structure of structures) {
             const typeParameters = structure.getTypeParameters();
-            const extendsTypes = structure.getValidExtendsTypes();
             const method = testRunnerFactory.addMethod({
                 name: `get${structure.getName()}TestRunner`,
                 onWriteFunctionBody: methodWriter => {
                     methodWriter.write(`return new ${structure.getName()}TestRunner(this.assertions`);
-                    typeParameters.forEach(typeParam => {
-                        const testRunnerName = `${typeParam.getName()}TestRunner`;
-                        methodWriter.write(`, ${testRunnerName}`);
-                    });
 
                     function writeType(typeDef: StructureTypeWrapper) {
                         const validExtendsDefs = typeDef.getImmediateValidDefinitions();
@@ -63,10 +58,22 @@ export class TestRunnerFactoryGenerator {
                         }
                     }
 
-                    extendsTypes.forEach(extendsType => {
+                    structure.getConstructorDependencies().forEach(dep => {
                         methodWriter.write(", ");
-                        writeType(extendsType);
+
+                        if (dep instanceof StructureTypeParameterWrapper) {
+                            const testRunnerName = `${dep.getName()}TestRunner`;
+                            methodWriter.write(`${testRunnerName}`);
+                        }
+                        else if (dep instanceof StructureTypeWrapper) {
+                            writeType(dep);
+                        }
+                        else if (dep instanceof StructureWrapper) {
+                            // todo: handle type parameters... currently this is a bug
+                            methodWriter.write(`this.get${dep.getName()}TestRunner()`);
+                        }
                     });
+
                     methodWriter.write(");");
                 }
             });
