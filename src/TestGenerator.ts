@@ -35,6 +35,16 @@ export class TestGenerator {
         this.transformOptions.addTypeTransform({ condition, typeTransform, testWrite });
     }
 
+    addDefaultValue(
+        condition: (
+            propertyDef: typeInfo.ClassPropertyDefinition | typeInfo.InterfacePropertyDefinition,
+            parent?: typeInfo.ClassDefinition | typeInfo.InterfaceDefinition
+        ) => boolean,
+        value: string
+    ) {
+        this.transformOptions.addDefaultValue({ condition, value });
+    }
+
     getTestFile(structures: (typeInfo.InterfaceDefinition | typeInfo.ClassDefinition)[]) {
         const testFile = typeInfo.createFile();
         this.assertionsClassGenerator.fillFile(testFile);

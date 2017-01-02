@@ -19,6 +19,10 @@ export class StructureWrapper {
         return this.structure.name;
     }
 
+    getDefinition() {
+        return this.structure;
+    }
+
     getTestStructureName() {
         return this.transformOptions.getNameToTestStructureName(this.structure.name);
     }

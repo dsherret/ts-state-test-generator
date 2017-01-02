@@ -15,6 +15,10 @@ export class StructurePropertyWrapper {
         return this.prop.name;
     }
 
+    getDefinition() {
+        return this.prop;
+    }
+
     getIsOptional() {
         return this.prop.isOptional;
     }

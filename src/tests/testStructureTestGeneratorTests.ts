@@ -24,6 +24,9 @@ describe(nameof(TestGenerator), () => {
                 name: "prop5",
                 type: "MyInterfaceToTransform"
             }, {
+                name: "propWithDefaultValue",
+                type: "string"
+            }, {
                 name: "propWithOptionalDefinition",
                 isOptional: true,
                 type: "MyClass"
@@ -68,6 +71,7 @@ describe(nameof(TestGenerator), () => {
             typeDef => typeDef.text === "MyInterfaceToTransform",
             newTypeDef => newTypeDef.text = "string",
             writer => writer.writeLine(`this.assertions.strictEqual(actualProperty.text, expectedProperty);`));
+        generator.addDefaultValue(prop => prop.name === "propWithDefaultValue", `"my default value"`);
         const structuresFile = generator.getTestFile([myInterfaceDef]);
 
         it("should write out the file", () => {
@@ -114,6 +118,7 @@ export interface MyInterfaceTestStructure {
     prop3: MyClassTestStructure;
     prop4: ((MyInterfaceTestStructure | MyClassTestStructure) & string);
     prop5: string;
+    propWithDefaultValue?: string;
     propWithOptionalDefinition?: MyClassTestStructure;
 }
 
@@ -146,6 +151,13 @@ export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfac
                 ((actualProperty, expectedProperty) =>{
                     this.assertions.strictEqual(actualProperty.text, expectedProperty);
                 })(actual.prop5, expected.prop5);
+            });
+            ${itAssertion}(${itMessage("propWithDefaultValue")}, () => {
+                let expectedValue = expected.propWithDefaultValue;
+                if (typeof expectedValue === "undefined") {
+                    expectedValue = "my default value";
+                }
+                this.assertions.strictEqual(actual.propWithDefaultValue, expectedValue);
             });
             ${itAssertion}(${itMessage("propWithOptionalDefinition")}, () => {
                 this.assertions.assertAny(() => {

@@ -1,9 +1,10 @@
 ﻿import * as typeInfo from "ts-type-info";
+import {TransformOptions} from "./TransformOptions";
 import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper} from "./wrappers";
 
 export class TestStructureGenerator {
-    constructor(private readonly typeTransformer: TypeTransformer) {
+    constructor(private readonly typeTransformer: TypeTransformer, private readonly transformOptions: TransformOptions) {
     }
 
     fillTestFileFromDefinition(testFile: typeInfo.FileDefinition, structure: StructureWrapper) {
@@ -25,10 +26,11 @@ export class TestStructureGenerator {
     }
 
     private fillTestStructureProperties(structure: StructureWrapper, testStructure: typeInfo.InterfaceDefinition) {
+        const defaultValueTransforms = this.transformOptions.getDefaultValueTransforms();
         structure.getProperties().forEach(prop => {
             const newProp = testStructure.addProperty({
                 name: prop.getName(),
-                isOptional: prop.getIsOptional()
+                isOptional: prop.getIsOptional() || defaultValueTransforms.some(t => t.condition(prop.getDefinition(), structure.getDefinition()))
             });
             newProp.type = this.typeTransformer.getNewType(prop.getType());
         });

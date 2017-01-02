@@ -11,7 +11,7 @@ export class TestRunnerGenerator {
     private readonly testFunctionBodyWriter: TestFunctionBodyWriter;
 
     constructor(private readonly transformOptions: TransformOptions) {
-        this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer());
+        this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer(), transformOptions);
         this.testFunctionBodyWriter = new TestFunctionBodyWriter(transformOptions);
     }
 

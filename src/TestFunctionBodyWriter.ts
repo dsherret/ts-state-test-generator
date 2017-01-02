@@ -1,6 +1,7 @@
 ﻿import CodeBlockWriter from "code-block-writer";
 import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper, StructurePropertyWrapper, StructureTypeWrapper} from "./wrappers";
+import {DefaultValueTransform} from "./transforms";
 
 export class TestFunctionBodyWriter {
     constructor(private readonly transformOptions: TransformOptions) {
@@ -38,15 +39,29 @@ export class TestFunctionBodyWriter {
         }).write(");").newLine();
     }
 
-    private writeTypeTest(structure: StructureWrapper, prop: StructurePropertyWrapper, structureType: StructureTypeWrapper, writer: CodeBlockWriter) {
+    private writeTypeTest(
+        structure: StructureWrapper,
+        prop: StructurePropertyWrapper,
+        structureType: StructureTypeWrapper,
+        writer: CodeBlockWriter
+    ) {
         const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
-
         if (matchedTypeTransforms.length > 0) {
             writer.write("((actualProperty, expectedProperty) =>").inlineBlock(() => {
                 matchedTypeTransforms.forEach(typeTransform => {
                     typeTransform.testWrite(writer);
                 });
             }).write(`)(actual.${prop.getName()}, expected.${prop.getName()});`).newLine();
+            return;
+        }
+
+        const matchedDefaultValueTransforms = this.transformOptions.getDefaultValueTransforms().filter(t => t.condition(prop.getDefinition(), structure.getDefinition()));
+        if (matchedDefaultValueTransforms.length > 0) {
+            writer.writeLine(`let expectedValue = expected.${prop.getName()};`);
+            writer.write(`if (typeof expectedValue === "undefined")`).block(() => {
+                writer.writeLine(`expectedValue = ${matchedDefaultValueTransforms[0].value};`);
+            });
+            writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expectedValue);`);
             return;
         }
 
