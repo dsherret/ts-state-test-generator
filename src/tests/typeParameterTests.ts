@@ -53,8 +53,8 @@ describe(nameof(TestGenerator), () => {
 `export class TestRunnerFactory {
     private readonly assertions: WrapperAssertions;
     private MyExtendsClassTestRunner: MyExtendsClassTestRunner;
-    private readonly MyTypeParameterClassTestRunnerArgsCache = new TestRunnerArgsCache<MyTypeParameterClassTestRunner>();
-    private readonly MyClassTestRunnerArgsCache = new TestRunnerArgsCache<MyClassTestRunner>();
+    private readonly MyTypeParameterClassTestRunnerArgsCache = new TestRunnerArgsCache<MyTypeParameterClassTestRunner<any, any>>();
+    private readonly MyClassTestRunnerArgsCache = new TestRunnerArgsCache<MyClassTestRunner<any>>();
 
     constructor(assertions?: Assertions) {
         this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());

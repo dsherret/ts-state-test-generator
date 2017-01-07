@@ -43,7 +43,7 @@ export class TestRunnerFactoryGenerator {
             if (structure.hasTypeParameters()) {
                 testRunnerFactory.addProperty({
                     name: `${argsCacheName}`,
-                    defaultExpression: `new TestRunnerArgsCache<${testRunnerName}>()`,
+                    defaultExpression: `new TestRunnerArgsCache<${testRunnerName}<${structure.getTypeParameters().map(t => "any").join(", ")}>>()`,
                     isReadonly: true,
                     scope: typeInfo.Scope.Private
                 });

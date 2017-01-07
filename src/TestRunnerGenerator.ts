@@ -29,7 +29,10 @@ export class TestRunnerGenerator {
                         isReadonly: true,
                         scope: typeInfo.ClassConstructorParameterScope.Private
                     }]
-                }
+                },
+                methods: [{
+                    name: "initialize"
+                }]
             });
 
             // add initialize dependencies
@@ -104,9 +107,7 @@ export class TestRunnerGenerator {
     }
 
     private addDependency(testRunnerClass: typeInfo.ClassDefinition, name: string, type: string) {
-        let initializeMethod = testRunnerClass.getMethod("initialize");
-        if (initializeMethod == null)
-            initializeMethod = testRunnerClass.addMethod({ name: "initialize" });
+        const initializeMethod = testRunnerClass.getMethod("initialize");
 
         initializeMethod!.addParameter({
             name,
