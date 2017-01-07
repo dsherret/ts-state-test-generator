@@ -35,6 +35,10 @@ export class StructureWrapper {
         return this.structure.typeParameters.length > 0;
     }
 
+    getTypeParametersCount() {
+        return this.structure.typeParameters.length;
+    }
+
     getTypeParameters() {
         return this.structure.typeParameters.map(t => this.wrapperFactory.getStructureTypeParameter(t));
     }

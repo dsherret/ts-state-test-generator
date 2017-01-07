@@ -41,9 +41,13 @@ export class TestRunnerFactoryGenerator {
             const testRunnerName = `${structure.getName()}TestRunner`;
             const testRunnerVariableName = `v${testRunnerName}`;
             if (structure.hasTypeParameters()) {
+                const typeParamsArray: string[] = [];
+                for (let i = 0; i < structure.getTypeParametersCount() * 2; i++)
+                    typeParamsArray.push("any");
+
                 testRunnerFactory.addProperty({
                     name: `${argsCacheName}`,
-                    defaultExpression: `new TestRunnerArgsCache<${testRunnerName}<${structure.getTypeParameters().map(t => "any").join(", ")}>>()`,
+                    defaultExpression: `new TestRunnerArgsCache<${testRunnerName}<${typeParamsArray.join(", ")}>>()`,
                     isReadonly: true,
                     scope: typeInfo.Scope.Private
                 });
