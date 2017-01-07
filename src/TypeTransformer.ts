@@ -17,6 +17,7 @@ export class TypeTransformer {
 
         const unionTypes = structureType.getUnionTypes();
         const intersectionTypes = structureType.getIntersectionTypes();
+        const arrayType = structureType.getArrayType();
         if (unionTypes.length > 0) {
             unionTypes.forEach(subType => {
                 const newSubType = this.getNewType(subType);
@@ -33,8 +34,8 @@ export class TypeTransformer {
 
             newTypeDef.text = `(${newTypeDef.intersectionTypes.map(t => t.text).join(" & ")})`;
         }
-        else if (structureType.getIsArrayType()) {
-            const arraySubType = this.getNewType(structureType.getArrayType()!);
+        else if (arrayType != null) {
+            const arraySubType = this.getNewType(arrayType);
             newTypeDef.arrayElementType = arraySubType;
             newTypeDef.text = `${arraySubType.text}[]`;
         }

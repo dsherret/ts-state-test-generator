@@ -28,7 +28,7 @@ export class StructureWrapper {
     }
 
     getProperties() {
-        return (this.structure.properties as ClassOrInterfacePropertyType[]).map(p => this.wrapperFactory.getStructureProperty(p));
+        return this.getValidProperties().map(p => this.wrapperFactory.getStructureProperty(p));
     }
 
     getTypeParameters() {
@@ -92,7 +92,7 @@ export class StructureWrapper {
     }
 
     private getPropertyDependencies() {
-        const props = this.structure.properties as ClassOrInterfacePropertyType[];
+        const props = this.getValidProperties();
         const dependencies: ClassOrInterfaceType[] = [];
         props.forEach(prop => {
             prop.type.getAllDefinitions().forEach(def => {
@@ -104,6 +104,37 @@ export class StructureWrapper {
             });
         });
         return dependencies.map(d => this.wrapperFactory.getStructure(d));
+    }
+
+    private getValidProperties() {
+        const props: ClassOrInterfacePropertyType[] = [];
+
+        (this.structure.properties as ClassOrInterfacePropertyType[]).forEach(prop => {
+            if (this.isValidPropertyType(prop.type)) {
+                props.push(prop);
+            }
+        });
+
+        return props;
+    }
+
+    private isValidPropertyType(type: typeInfo.TypeDefinition) {
+        for (let unionType of type.unionTypes) {
+            if (!this.isValidPropertyType(unionType)) {
+                return false;
+            }
+        }
+        for (let intersectionType of type.intersectionTypes) {
+            if (!this.isValidPropertyType(intersectionType)) {
+                return false;
+            }
+        }
+
+        if (type.unionTypes.length === 0 && type.intersectionTypes.length === 0) {
+            return type.callSignatures.length === 0;
+        }
+
+        return true;
     }
 
     private getNameWithTypeParametersInternal(

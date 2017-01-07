@@ -1,7 +1,7 @@
 {
   "name": "ts-state-test-generator",
-  "version": "0.1.0",
-  "description": "Base project for typescript libraries",
+  "version": "0.1.4",
+  "description": "Generates tests for checking the state of a class or interface.",
   "main": "dist/main.js",
   "typings": "ts-state-test-generator.d.ts",
   "scripts": {

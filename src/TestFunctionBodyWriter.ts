@@ -122,19 +122,19 @@ export class TestFunctionBodyWriter {
         const validDefinitions = structureType.getImmediateValidDefinitions();
         const hasValidDefinition = validDefinitions.length > 0;
         const isTypeParameterType = structure.getTypeParameters().some(typeParam => typeParam.getName() === structureType.getText());
-        const isArrayType = structureType.getIsArrayType();
+        const arrayType = structureType.getArrayType();
 
-        if (isArrayType) {
+        if (arrayType != null) {
             writer.write(`this.assertions.it("should have the same length", () => `).inlineBlock(() => {
                 writer.writeLine(`this.assertions.strictEqual(${actualName}.length, ${expectedName}.length);`);
             }).write(");").newLine();
 
             writer.write(`for (let i = 0; i < (${expectedName} || []).length; i++)`).block(() => {
-                writer.write("this.assertions.describe(`index ${i}`, () => ").inlineBlock(() => {
-                    writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
-                        this.writeTypeTest(structure, structureType.getArrayType()!, writer, `actualValue`, `expectedValue`);
-                    }).write(`)(${actualName}[i], ${expectedName}[i]);`);
-                }).write(");");
+                writer.write("((actualValue, expectedValue, i) => ").inlineBlock(() => {
+                    writer.write("this.assertions.describe(`index ${i}`, () => ").inlineBlock(() => {
+                        this.writeTypeTest(structure, arrayType, writer, `actualValue`, `expectedValue`);
+                    }).write(");");
+                }).write(`)(${actualName}[i], ${expectedName}[i], i);`);
             });
         }
         else if (isTypeParameterType)

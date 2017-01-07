@@ -58,10 +58,6 @@ export class StructureTypeWrapper {
         return this.typeDef.typeArguments.map(t => this.wrapperFactory.getStructureType(t));
     }
 
-    getIsArrayType() {
-        return this.typeDef.isArrayType();
-    }
-
     getArrayType() {
         return this.typeDef.arrayElementType == null ? null : this.wrapperFactory.getStructureType(this.typeDef.arrayElementType!);
     }

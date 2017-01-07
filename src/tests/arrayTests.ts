@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {expect} from "chai";
 import {TestGenerator} from "./../TestGenerator";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, testRunnerFactoryStartTemplate, testRunnerStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("array tests", () => {
@@ -33,12 +33,8 @@ describe(nameof(TestGenerator), () => {
 
         it("should write out the file", () => {
             const expectedCode =
-                `export class TestRunnerFactory {
-    ${testRunnerFactoryStartTemplate}
-
-    getMyClassTestRunner() {
-        return new MyClassTestRunner(this.assertions);
-    }
+`export class TestRunnerFactory {
+    ${testRunnerFactoryStartTemplate(["MyClass"], [""])}
 }
 
 export class StateTestRunner {
@@ -57,8 +53,7 @@ export interface MyClassTestStructure {
 }
 
 export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions) {
-    }
+    ${testRunnerStartTemplate([], [])}
 
     runTest(actual: MyClass, expected: MyClassTestStructure) {
         ${describeAssertion}("MyClass", () => {
@@ -68,13 +63,13 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
                     this.assertions.strictEqual(actual.prop.length, expected.prop.length);
                 });
                 for (let i = 0; i < (expected.prop || []).length; i++) {
-                    ${describeAssertion}(\`index \${i}\`, () => {
-                        ((actualValue, expectedValue) => {
+                    ((actualValue, expectedValue, i) => {
+                        ${describeAssertion}(\`index \${i}\`, () => {
                             ${itAssertion}(${itMessage}, () => {
                                 this.assertions.strictEqual(actualValue, expectedValue);
                             });
-                        })(actual.prop[i], expected.prop[i]);
-                    });
+                        });
+                    })(actual.prop[i], expected.prop[i], i);
                 }
             });
             ${describeAssertion}("prop2", () => {
@@ -82,26 +77,26 @@ export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructu
                     this.assertions.strictEqual(actual.prop2.length, expected.prop2.length);
                 });
                 for (let i = 0; i < (expected.prop2 || []).length; i++) {
-                    ${describeAssertion}(\`index \${i}\`, () => {
-                        ((actualValue, expectedValue) => {
+                    ((actualValue, expectedValue, i) => {
+                        ${describeAssertion}(\`index \${i}\`, () => {
                             this.assertions.assertAny(() => {
                                 ${itAssertion}("should have the same length", () => {
                                     this.assertions.strictEqual(actualValue.length, expectedValue.length);
                                 });
                                 for (let i = 0; i < (expectedValue || []).length; i++) {
-                                    ${describeAssertion}(\`index \${i}\`, () => {
-                                        ((actualValue, expectedValue) => {
+                                    ((actualValue, expectedValue, i) => {
+                                        ${describeAssertion}(\`index \${i}\`, () => {
                                             ${itAssertion}("should have the same value", () => {
                                                 this.assertions.strictEqual(actualValue, expectedValue);
                                             });
-                                        })(actualValue[i], expectedValue[i]);
-                                    });
+                                        });
+                                    })(actualValue[i], expectedValue[i], i);
                                 }
                             }, () => {
                                 this.runTest(actualValue as any as MyClass, expectedValue as any as MyClassTestStructure);
                             });
-                        })(actual.prop2[i], expected.prop2[i]);
-                    });
+                        });
+                    })(actual.prop2[i], expected.prop2[i], i);
                 }
             });
         });
