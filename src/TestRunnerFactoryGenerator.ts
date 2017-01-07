@@ -37,12 +37,55 @@ export class TestRunnerFactoryGenerator {
 
         for (const structure of structures) {
             const typeParameters = structure.getTypeParameters();
+            const argsCacheName = `${structure.getName()}TestRunnerArgsCache`;
+            const testRunnerName = `${structure.getName()}TestRunner`;
+            const testRunnerVariableName = `v${testRunnerName}`;
+            if (structure.hasTypeParameters()) {
+                testRunnerFactory.addProperty({
+                    name: `${argsCacheName}`,
+                    defaultExpression: `new TestRunnerArgsCache<${testRunnerName}>()`,
+                    isReadonly: true,
+                    scope: typeInfo.Scope.Private
+                });
+            }
+            else {
+                testRunnerFactory.addProperty({
+                    name: `${testRunnerName}`,
+                    type: `${testRunnerName}`,
+                    scope: typeInfo.Scope.Private
+                });
+            }
             const method = testRunnerFactory.addMethod({
-                name: `get${structure.getName()}TestRunner`,
+                name: `get${testRunnerName}`,
                 onWriteFunctionBody: methodWriter => {
-                    methodWriter.write(`return new ${structure.getName()}TestRunner(this.assertions`);
+                    if (structure.hasTypeParameters()) {
+                        methodWriter.write("const args = [");
+                        typeParameters.forEach((typeParam, i) => {
+                            methodWriter.conditionalWrite(i > 0, ", ");
+                            methodWriter.write(`${typeParam.getName()}TestRunner`);
+                        });
+                        methodWriter.write("];").newLine();
+                        methodWriter.writeLine(`const index = this.${argsCacheName}.getIndex(args);`).newLine();
+                        methodWriter.write("if (index >= 0)").block(() => {
+                            methodWriter.writeLine(`return this.${argsCacheName}.getItemAtIndex(index);`);
+                        }).newLine();
+                        methodWriter.writeLine(`const ${testRunnerVariableName} = new ${testRunnerName}(this.assertions);`);
+                        methodWriter.writeLine(`this.${argsCacheName}.addItem(${testRunnerVariableName}, args);`);
+                    }
+                    else {
+                        methodWriter.write(`if (this.${testRunnerName} != null)`).block(() => {
+                            methodWriter.write(`return this.${testRunnerName};`);
+                        });
 
-                    function writeType(typeDef: StructureTypeWrapper) {
+                        methodWriter.newLine();
+                        methodWriter.writeLine(`const ${testRunnerVariableName} = new ${testRunnerName}(this.assertions);`);
+                        methodWriter.writeLine(`this.${testRunnerName} = ${testRunnerVariableName};`);
+                    }
+
+                    methodWriter.newLine();
+                    methodWriter.write(`${testRunnerVariableName}.initialize(`);
+
+                    const writeType = (typeDef: StructureTypeWrapper) => {
                         const validExtendsDefs = typeDef.getImmediateValidDefinitions();
                         if (validExtendsDefs.length === 0)
                             methodWriter.write(`this.getStrictEqualTestRunner()`);
@@ -58,8 +101,8 @@ export class TestRunnerFactoryGenerator {
                         }
                     }
 
-                    structure.getConstructorDependencies().forEach(dep => {
-                        methodWriter.write(", ");
+                    structure.getInitializeDependencies().forEach((dep, i) => {
+                        methodWriter.conditionalWrite(i > 0, ", ");
 
                         if (dep instanceof StructureTypeParameterWrapper) {
                             const testRunnerName = `${dep.getName()}TestRunner`;
@@ -74,7 +117,9 @@ export class TestRunnerFactoryGenerator {
                         }
                     });
 
-                    methodWriter.write(");");
+                    methodWriter.write(");").newLine();
+                    methodWriter.newLine();
+                    methodWriter.writeLine(`return ${testRunnerVariableName};`);
                 }
             });
 

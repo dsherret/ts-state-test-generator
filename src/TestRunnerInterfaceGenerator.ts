@@ -13,6 +13,13 @@ export class TestRunnerInterfaceGenerator {
             }]
         });
 
+        file.addInterface({
+            name: "TestRunnerConstructor",
+            isExported: true,
+            typeParameters: [{ name: "T", constraintType: "TestRunner<any, any>" }],
+            newSignatures: [{ returnType: "T" }]
+        });
+
         file.addClass({
             name: "StrictEqualTestRunner",
             implementsTypes: ["TestRunner<any, any>"],

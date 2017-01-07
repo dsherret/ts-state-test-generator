@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {expect} from "chai";
 import {TestGenerator} from "./../TestGenerator";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate, testRunnerStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("inheritance tests", () => {
@@ -27,19 +27,9 @@ describe(nameof(TestGenerator), () => {
         it("should write out the file", () => {
             const expectedCode =
 `export class TestRunnerFactory {
-    ${testRunnerFactoryStartTemplate}
-
-    getMyExtendsClassTestRunner() {
-        return new MyExtendsClassTestRunner(this.assertions, this.getMyBaseClassTestRunner());
-    }
-
-    getMyOtherExtendsClassTestRunner() {
-        return new MyOtherExtendsClassTestRunner(this.assertions, this.getMyBaseClassTestRunner());
-    }
-
-    getMyBaseClassTestRunner() {
-        return new MyBaseClassTestRunner(this.assertions);
-    }
+    ${testRunnerFactoryStartTemplate(
+["MyExtendsClass", "MyOtherExtendsClass", "MyBaseClass"],
+[", this.getMyBaseClassTestRunner()", ", this.getMyBaseClassTestRunner()", ""])}
 }
 
 export class StateTestRunner {
@@ -67,8 +57,7 @@ export interface MyExtendsClassTestStructure extends MyBaseClassTestStructure {
 }
 
 export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyExtendsClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly MyBaseClassTestRunner: TestRunner<MyBaseClass, MyBaseClassTestStructure>) {
-    }
+    ${testRunnerStartTemplate(["MyBaseClass"], ["TestRunner<MyBaseClass, MyBaseClassTestStructure>"])}
 
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
         ${describeAssertion}("MyExtendsClass", () => {
@@ -87,8 +76,7 @@ export interface MyOtherExtendsClassTestStructure extends MyBaseClassTestStructu
 }
 
 export class MyOtherExtendsClassTestRunner implements TestRunner<MyOtherExtendsClass, MyOtherExtendsClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly MyBaseClassTestRunner: TestRunner<MyBaseClass, MyBaseClassTestStructure>) {
-    }
+    ${testRunnerStartTemplate(["MyBaseClass"], ["TestRunner<MyBaseClass, MyBaseClassTestStructure>"])}
 
     runTest(actual: MyOtherExtendsClass, expected: MyOtherExtendsClassTestStructure) {
         ${describeAssertion}("MyOtherExtendsClass", () => {
@@ -103,8 +91,7 @@ export interface MyBaseClassTestStructure {
 }
 
 export class MyBaseClassTestRunner implements TestRunner<MyBaseClass, MyBaseClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions) {
-    }
+    ${testRunnerStartTemplate([], [])}
 
     runTest(actual: MyBaseClass, expected: MyBaseClassTestStructure) {
         ${describeAssertion}("MyBaseClass", () => {

@@ -17,17 +17,35 @@ export class TestRunnerGenerator {
 
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
         for (const structure of structures) {
-            const writer = new CodeBlockWriter();
-
             this.testStructureGenerator.fillTestFileFromDefinition(testFile, structure);
 
             const testRunnerClass = testFile.addClass({
                 name: `${structure.getName()}TestRunner`,
-                isExported: true
+                isExported: true,
+                constructorDef: {
+                    parameters: [{
+                        name: "assertions",
+                        type: "WrapperAssertions",
+                        isReadonly: true,
+                        scope: typeInfo.ClassConstructorParameterScope.Private
+                    }]
+                }
             });
-            this.addConstructorDependency(testRunnerClass, "assertions", "WrapperAssertions");
 
-            this.testFunctionBodyWriter.writeForStructure(structure, writer);
+            // add initialize dependencies
+            structure.getInitializeDependencies().forEach(dep => {
+                if (dep instanceof StructureTypeParameterWrapper) {
+                    this.addDependency(testRunnerClass, `${dep.getName()}TestRunner`, `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                }
+                else if (dep instanceof StructureTypeWrapper) {
+                    this.addDependency(testRunnerClass, `${dep.getImmediateValidDefinitions()[0].getName()}TestRunner`,
+                        `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                }
+                else if (dep instanceof StructureWrapper) {
+                    this.addDependency(testRunnerClass, `${dep.getName()}TestRunner`,
+                        `TestRunner<${dep.getNameWithTypeParameters()}, ${dep.getTestStructureNameWithTypeParameters()}>`);
+                }
+            });
 
             const testMethod = testRunnerClass.addMethod({
                 name: `runTest`,
@@ -59,38 +77,40 @@ export class TestRunnerGenerator {
                     constraintType: constraintType == null ? undefined : constraintType.getTestStructureName()
                 });
             });
-            // add constructor dependencies
-            structure.getConstructorDependencies().forEach(dep => {
-                if (dep instanceof StructureTypeParameterWrapper) {
-                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`, `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
-                }
-                else if (dep instanceof StructureTypeWrapper) {
-                    this.addConstructorDependency(testRunnerClass, `${dep.getImmediateValidDefinitions()[0].getName()}TestRunner`,
-                        `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
-                }
-                else if (dep instanceof StructureWrapper) {
-                    this.addConstructorDependency(testRunnerClass, `${dep.getName()}TestRunner`,
-                        `TestRunner<${dep.getNameWithTypeParameters()}, ${dep.getTestStructureNameWithTypeParameters()}>`);
-                }
-            });
+
+            const writer = new CodeBlockWriter();
+            this.testFunctionBodyWriter.writeForStructure(structure, writer);
 
             testMethod.onWriteFunctionBody = methodBodyWriter => {
                 methodBodyWriter.write(writer.toString());
             };
+
+            const initializeMethod = testRunnerClass.getMethod("initialize")!;
+            initializeMethod.onWriteFunctionBody = methodWriter => {
+                initializeMethod.parameters.forEach(p => {
+                    methodWriter.writeLine(`this.${p.name} = ${p.name};`);
+                });
+            };
+            initializeMethod.parameters.forEach(p => {
+                testRunnerClass.addProperty({
+                    name: p.name!,
+                    type: p.type.text,
+                    scope: typeInfo.Scope.Private
+                });
+            });
         }
 
         return testFile;
     }
 
-    private addConstructorDependency(testRunnerClass: typeInfo.ClassDefinition, name: string, type: string) {
-        if (testRunnerClass.constructorDef == null)
-            testRunnerClass.setConstructor({});
+    private addDependency(testRunnerClass: typeInfo.ClassDefinition, name: string, type: string) {
+        let initializeMethod = testRunnerClass.getMethod("initialize");
+        if (initializeMethod == null)
+            initializeMethod = testRunnerClass.addMethod({ name: "initialize" });
 
-        testRunnerClass.constructorDef.addParameter({
+        initializeMethod!.addParameter({
             name,
-            type,
-            isReadonly: true,
-            scope: typeInfo.ClassConstructorParameterScope.Private
+            type
         });
     }
 }

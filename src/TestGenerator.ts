@@ -4,6 +4,7 @@ import {AssertionsClassGenerator} from "./AssertionsClassGenerator";
 import {TransformOptions} from "./TransformOptions";
 import {TestRunnerGenerator} from "./TestRunnerGenerator";
 import {TestRunnerInterfaceGenerator} from "./TestRunnerInterfaceGenerator";
+import {TestRunnerArgsCacheGenerator} from "./TestRunnerArgsCacheGenerator";
 import {StructureDependencyGetter} from "./StructureDependencyGetter";
 import {StateTestRunnerGenerator} from "./StateTestRunnerGenerator";
 import {TestRunnerFactoryGenerator} from "./TestRunnerFactoryGenerator";
@@ -12,6 +13,7 @@ import {WrapperFactory} from "./wrappers";
 export class TestGenerator {
     private readonly assertionsClassGenerator = new AssertionsClassGenerator();
     private readonly testRunnerInterfaceGenerator = new TestRunnerInterfaceGenerator();
+    private readonly testRunnerArgsCacheGenerator = new TestRunnerArgsCacheGenerator();
     private readonly structureDependencyGetter = new StructureDependencyGetter();
     private readonly transformOptions: TransformOptions;
     private readonly testRunnerGenerator: TestRunnerGenerator;
@@ -49,6 +51,7 @@ export class TestGenerator {
         const testFile = typeInfo.createFile();
         this.assertionsClassGenerator.fillFile(testFile);
         this.testRunnerInterfaceGenerator.fillFile(testFile);
+        this.testRunnerArgsCacheGenerator.fillFile(testFile);
         const structureWrappers = this.structureDependencyGetter.getAllStructures(structures.map(s => this.wrapperFactory.getStructure(s)));
         this.testRunnerFactoryGenerator.fillTestFile(testFile, structureWrappers);
         this.stateTestRunnerGenerator.fillTestFile(testFile, structureWrappers);

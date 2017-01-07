@@ -1,7 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TestGenerator} from "../TestGenerator";
+import {TestGenerator} from "./../TestGenerator";
 import {expect} from "chai";
-import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate} from "./templates";
+import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, strictEqual, testRunnerFactoryStartTemplate, testRunnerStartTemplate} from "./templates";
 
 describe(nameof(TestGenerator), () => {
     describe("getting structures", () => {
@@ -77,19 +77,9 @@ describe(nameof(TestGenerator), () => {
         it("should write out the file", () => {
             const expectedCode =
 `export class TestRunnerFactory {
-    ${testRunnerFactoryStartTemplate}
-
-    getMyInterfaceTestRunner() {
-        return new MyInterfaceTestRunner(this.assertions, this.getMyClassTestRunner(), this.getMyInterfaceToTransformTestRunner());
-    }
-
-    getMyClassTestRunner() {
-        return new MyClassTestRunner(this.assertions);
-    }
-
-    getMyInterfaceToTransformTestRunner() {
-        return new MyInterfaceToTransformTestRunner(this.assertions);
-    }
+    ${testRunnerFactoryStartTemplate(
+["MyInterface", "MyClass", "MyInterfaceToTransform"],
+[", this.getMyClassTestRunner(), this.getMyInterfaceToTransformTestRunner()", "", ""])}
 }
 
 export class StateTestRunner {
@@ -123,9 +113,9 @@ export interface MyInterfaceTestStructure {
 }
 
 export class MyInterfaceTestRunner implements TestRunner<MyInterface, MyInterfaceTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly MyClassTestRunner: TestRunner<MyClass, MyClassTestStructure>, \
-private readonly MyInterfaceToTransformTestRunner: TestRunner<MyInterfaceToTransform, MyInterfaceToTransformTestStructure>) {
-    }
+    ${testRunnerStartTemplate(
+["MyClass", "MyInterfaceToTransform"],
+["TestRunner<MyClass, MyClassTestStructure>", "TestRunner<MyInterfaceToTransform, MyInterfaceToTransformTestStructure>"])}
 
     runTest(actual: MyInterface, expected: MyInterfaceTestStructure) {
         ${describeAssertion}("MyInterface", () => {
@@ -189,8 +179,7 @@ export interface MyClassTestStructure {
 }
 
 export class MyClassTestRunner implements TestRunner<MyClass, MyClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions) {
-    }
+    ${testRunnerStartTemplate([], [])}
 
     runTest(actual: MyClass, expected: MyClassTestStructure) {
         ${describeAssertion}("MyClass", () => {
@@ -209,8 +198,7 @@ export interface MyInterfaceToTransformTestStructure {
 }
 
 export class MyInterfaceToTransformTestRunner implements TestRunner<MyInterfaceToTransform, MyInterfaceToTransformTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions) {
-    }
+    ${testRunnerStartTemplate([], [])}
 
     runTest(actual: MyInterfaceToTransform, expected: MyInterfaceToTransformTestStructure) {
         ${describeAssertion}("MyInterfaceToTransform", () => {

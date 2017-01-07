@@ -51,20 +51,63 @@ describe(nameof(TestGenerator), () => {
         it("should write out the file", () => {
             const expectedCode =
 `export class TestRunnerFactory {
-    ${testRunnerFactoryStartTemplate}
+    private readonly assertions: WrapperAssertions;
+    private MyExtendsClassTestRunner: MyExtendsClassTestRunner;
+    private readonly MyTypeParameterClassTestRunnerArgsCache = new TestRunnerArgsCache<MyTypeParameterClassTestRunner>();
+    private readonly MyClassTestRunnerArgsCache = new TestRunnerArgsCache<MyClassTestRunner>();
+
+    constructor(assertions?: Assertions) {
+        this.assertions = new WrapperAssertions(assertions || new DefaultAssertions());
+    }
+
+    getStrictEqualTestRunner() {
+        return new StrictEqualTestRunner(this.assertions);
+    }
 
     getMyExtendsClassTestRunner() {
-        return new MyExtendsClassTestRunner(this.assertions, this.getMyTypeParameterClassTestRunner(\
-this.getStrictEqualTestRunner(), this.getMyClassTestRunner(this.getStrictEqualTestRunner())));
+        if (this.MyExtendsClassTestRunner != null) {
+            return this.MyExtendsClassTestRunner;
+        }
+
+        const vMyExtendsClassTestRunner = new MyExtendsClassTestRunner(this.assertions);
+        this.MyExtendsClassTestRunner = vMyExtendsClassTestRunner;
+
+        vMyExtendsClassTestRunner.initialize(this.getMyTypeParameterClassTestRunner(this.getStrictEqualTestRunner(), this.getMyClassTestRunner(this.getStrictEqualTestRunner())));
+
+        return vMyExtendsClassTestRunner;
     }
 
     getMyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>>\
 (TTestRunner: TestRunner<T, TExpected>, UTestRunner: TestRunner<U, UExpected>) {
-        return new MyTypeParameterClassTestRunner(this.assertions, TTestRunner, UTestRunner);
+        const args = [TTestRunner, UTestRunner];
+        const index = this.MyTypeParameterClassTestRunnerArgsCache.getIndex(args);
+
+        if (index >= 0) {
+            return this.MyTypeParameterClassTestRunnerArgsCache.getItemAtIndex(index);
+        }
+
+        const vMyTypeParameterClassTestRunner = new MyTypeParameterClassTestRunner(this.assertions);
+        this.MyTypeParameterClassTestRunnerArgsCache.addItem(vMyTypeParameterClassTestRunner, args);
+
+        vMyTypeParameterClassTestRunner.initialize(TTestRunner, UTestRunner);
+
+        return vMyTypeParameterClassTestRunner;
     }
 
     getMyClassTestRunner<T, TExpected>(TTestRunner: TestRunner<T, TExpected>) {
-        return new MyClassTestRunner(this.assertions, TTestRunner);
+        const args = [TTestRunner];
+        const index = this.MyClassTestRunnerArgsCache.getIndex(args);
+
+        if (index >= 0) {
+            return this.MyClassTestRunnerArgsCache.getItemAtIndex(index);
+        }
+
+        const vMyClassTestRunner = new MyClassTestRunner(this.assertions);
+        this.MyClassTestRunnerArgsCache.addItem(vMyClassTestRunner, args);
+
+        vMyClassTestRunner.initialize(TTestRunner);
+
+        return vMyClassTestRunner;
     }
 }
 
@@ -95,8 +138,13 @@ export interface MyExtendsClassTestStructure extends MyTypeParameterClassTestStr
 }
 
 export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyExtendsClassTestStructure> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, \
-MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
+    private MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>;
+
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    initialize(MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
+        this.MyTypeParameterClassTestRunner = MyTypeParameterClassTestRunner;
     }
 
     runTest(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
@@ -119,8 +167,15 @@ export interface MyTypeParameterClassTestStructure<T, U extends MyClassTestStruc
 
 export class MyTypeParameterClassTestRunner<T, U extends MyClass<string>, TExpected, UExpected extends MyClassTestStructure<string>> \
 implements TestRunner<MyTypeParameterClass<T, U>, MyTypeParameterClassTestStructure<TExpected, UExpected>> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: TestRunner<T, TExpected>, \
-private readonly UTestRunner: TestRunner<U, UExpected>) {
+    private TTestRunner: TestRunner<T, TExpected>;
+    private UTestRunner: TestRunner<U, UExpected>;
+
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    initialize(TTestRunner: TestRunner<T, TExpected>, UTestRunner: TestRunner<U, UExpected>) {
+        this.TTestRunner = TTestRunner;
+        this.UTestRunner = UTestRunner;
     }
 
     runTest(actual: MyTypeParameterClass<T, U>, expected: MyTypeParameterClassTestStructure<TExpected, UExpected>) {
@@ -141,7 +196,13 @@ export interface MyClassTestStructure<T> {
 }
 
 export class MyClassTestRunner<T, TExpected> implements TestRunner<MyClass<T>, MyClassTestStructure<TExpected>> {
-    constructor(private readonly assertions: WrapperAssertions, private readonly TTestRunner: TestRunner<T, TExpected>) {
+    private TTestRunner: TestRunner<T, TExpected>;
+
+    constructor(private readonly assertions: WrapperAssertions) {
+    }
+
+    initialize(TTestRunner: TestRunner<T, TExpected>) {
+        this.TTestRunner = TTestRunner;
     }
 
     runTest(actual: MyClass<T>, expected: MyClassTestStructure<TExpected>) {

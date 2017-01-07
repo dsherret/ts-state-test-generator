@@ -31,6 +31,10 @@ export class StructureWrapper {
         return this.getValidProperties().map(p => this.wrapperFactory.getStructureProperty(p));
     }
 
+    hasTypeParameters() {
+        return this.structure.typeParameters.length > 0;
+    }
+
     getTypeParameters() {
         return this.structure.typeParameters.map(t => this.wrapperFactory.getStructureTypeParameter(t));
     }
@@ -65,7 +69,7 @@ export class StructureWrapper {
         return this.getNameWithTypeParametersInternal(this.getTestStructureName(), t => t.getTestStructureName());
     }
 
-    getConstructorDependencies(): (StructureTypeWrapper | StructureWrapper | StructureTypeParameterWrapper)[] {
+    getInitializeDependencies(): (StructureTypeWrapper | StructureWrapper | StructureTypeParameterWrapper)[] {
         const typeParams = this.getTypeParameters();
         const extendsTypes = this.getValidExtendsTypes();
         const propDependencies = this.getPropertyDependencies();
