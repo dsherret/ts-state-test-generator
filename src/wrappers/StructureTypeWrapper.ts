@@ -1,5 +1,6 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {TransformOptions} from "./../TransformOptions";
+import {StructureWrapper} from "./StructureWrapper";
 import {WrapperFactory} from "./WrapperFactory";
 
 type ClassOrInterfaceType = typeInfo.InterfaceDefinition | typeInfo.ClassDefinition;
@@ -8,6 +9,7 @@ export class StructureTypeWrapper {
     constructor(
         private readonly wrapperFactory: WrapperFactory,
         private readonly transformOptions: TransformOptions,
+        private readonly structure: StructureWrapper,
         private readonly typeDef: typeInfo.TypeDefinition
     ) {
     }
@@ -16,16 +18,20 @@ export class StructureTypeWrapper {
         return this.typeDef.text;
     }
 
+    isTypeParameterType() {
+        return this.structure.getTypeParameters().some(typeParam => typeParam.getName() === this.getText());
+    }
+
     getMatchedTypeTransforms() {
         return this.transformOptions.getTypeTransforms().filter(t => t.condition(this.typeDef));
     }
 
     getUnionTypes() {
-        return this.typeDef.unionTypes.map(t => this.wrapperFactory.getStructureType(t));
+        return this.typeDef.unionTypes.map(t => this.wrapperFactory.getStructureType(this.structure, t));
     }
 
     getIntersectionTypes() {
-        return this.typeDef.intersectionTypes.map(t => this.wrapperFactory.getStructureType(t));
+        return this.typeDef.intersectionTypes.map(t => this.wrapperFactory.getStructureType(this.structure, t));
     }
 
     getAllValidDefinitions() {
@@ -54,12 +60,26 @@ export class StructureTypeWrapper {
         return this.getNameWithTypeParametersInternal(validDefs[0].getTestStructureName(), structureType => structureType.getTestStructureName());
     }
 
+    getTestStructureNameForTestRunner(): string {
+        const validDefs = this.getImmediateValidDefinitions();
+
+        if (validDefs.length === 0)
+            return this.getText();
+
+        return this.getNameWithTypeParametersInternal(validDefs[0].getTestStructureName(), structureType => {
+            let name = structureType.getTestStructureNameForTestRunner();
+            if (structureType.isTypeParameterType())
+                name += "Expected";
+            return name;
+        });
+    }
+
     getTypeArguments() {
-        return this.typeDef.typeArguments.map(t => this.wrapperFactory.getStructureType(t));
+        return this.typeDef.typeArguments.map(t => this.wrapperFactory.getStructureType(this.structure, t));
     }
 
     getArrayType() {
-        return this.typeDef.arrayElementType == null ? null : this.wrapperFactory.getStructureType(this.typeDef.arrayElementType!);
+        return this.typeDef.arrayElementType == null ? null : this.wrapperFactory.getStructureType(this.structure, this.typeDef.arrayElementType!);
     }
 
     private getNameWithTypeParametersInternal(
@@ -73,7 +93,7 @@ export class StructureTypeWrapper {
         this.typeDef.typeArguments.forEach((typeArg, i) => {
             if (i !== 0)
                 name += ", ";
-            name += this.wrapperFactory.getStructureType(typeArg).getTestStructureName();
+            name += getTypeName(this.wrapperFactory.getStructureType(this.structure, typeArg));
         });
         name += ">";
 

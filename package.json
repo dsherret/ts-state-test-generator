@@ -1,6 +1,6 @@
 {
   "name": "ts-state-test-generator",
-  "version": "0.1.6",
+  "version": "0.1.13",
   "description": "Generates tests for checking the state of a class or interface.",
   "main": "dist/main.js",
   "typings": "ts-state-test-generator.d.ts",
@@ -26,6 +26,9 @@
   "typescript": {
     "definition": "ts-state-test-generator.d.ts"
   },
+  "peerDependencies": {
+    "ts-type-info": "^6.2.2"
+  },
   "devDependencies": {
     "@types/chai": "^3.4.34",
     "@types/mocha": "^2.2.33",
@@ -42,7 +45,6 @@
     "gulp-typescript": "^2.13.3",
     "mocha": "^2.3.3",
     "ts-nameof": "^0.7.0",
-    "ts-type-info": "^6.2.1",
     "tslint": "^3.13.0",
     "typescript": "^2.1.4"
   }

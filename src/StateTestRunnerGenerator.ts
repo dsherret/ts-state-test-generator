@@ -1,11 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper} from "./wrappers";
 
 export class StateTestRunnerGenerator {
-    constructor(private readonly transformOptions: TransformOptions) {
-    }
-
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
         const stateTestRunner = testFile.addClass({
             name: "StateTestRunner",

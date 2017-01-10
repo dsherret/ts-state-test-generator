@@ -1,19 +1,13 @@
 ﻿import * as typeInfo from "ts-type-info";
 import CodeBlockWriter from "code-block-writer";
-import {TransformOptions} from "./TransformOptions";
 import {TestFunctionBodyWriter} from "./TestFunctionBodyWriter";
 import {TestStructureGenerator} from "./TestStructureGenerator";
 import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper, StructureTypeWrapper, StructureTypeParameterWrapper} from "./wrappers";
 
 export class TestRunnerGenerator {
-    private readonly testStructureGenerator: TestStructureGenerator;
-    private readonly testFunctionBodyWriter: TestFunctionBodyWriter;
-
-    constructor(private readonly transformOptions: TransformOptions) {
-        this.testStructureGenerator = new TestStructureGenerator(new TypeTransformer(), transformOptions);
-        this.testFunctionBodyWriter = new TestFunctionBodyWriter(transformOptions);
-    }
+    private readonly testStructureGenerator = new TestStructureGenerator(new TypeTransformer());
+    private readonly testFunctionBodyWriter = new TestFunctionBodyWriter();
 
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
         for (const structure of structures) {
@@ -42,7 +36,7 @@ export class TestRunnerGenerator {
                 }
                 else if (dep instanceof StructureTypeWrapper) {
                     this.addDependency(testRunnerClass, `${dep.getImmediateValidDefinitions()[0].getName()}TestRunner`,
-                        `TestRunner<${dep.getName()}, ${dep.getTestStructureName()}>`);
+                        `TestRunner<${dep.getName()}, ${dep.getTestStructureNameForTestRunner()}>`);
                 }
                 else if (dep instanceof StructureWrapper) {
                     this.addDependency(testRunnerClass, `${dep.getName()}TestRunner`,

@@ -4,7 +4,7 @@ import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper} from "./wrappers";
 
 export class TestStructureGenerator {
-    constructor(private readonly typeTransformer: TypeTransformer, private readonly transformOptions: TransformOptions) {
+    constructor(private readonly typeTransformer: TypeTransformer) {
     }
 
     fillTestFileFromDefinition(testFile: typeInfo.FileDefinition, structure: StructureWrapper) {
@@ -26,13 +26,16 @@ export class TestStructureGenerator {
     }
 
     private fillTestStructureProperties(structure: StructureWrapper, testStructure: typeInfo.InterfaceDefinition) {
-        const defaultValueTransforms = this.transformOptions.getDefaultValueTransforms();
         structure.getProperties().forEach(prop => {
+            const propertyTransforms = prop.getMatchedPropertyTransforms();
             const newProp = testStructure.addProperty({
                 name: prop.getName(),
-                isOptional: prop.getIsOptional() || defaultValueTransforms.some(t => t.condition(prop.getDefinition(), structure.getDefinition()))
+                // todo: maybe no propTransforms.length === 0 here
+                isOptional: prop.getIsOptional() || (propertyTransforms.length === 0 && prop.getMatchedDefaultTransforms().length > 0) || prop.hasMatchedOptInTransforms()
             });
             newProp.type = this.typeTransformer.getNewType(prop.getType());
+
+            propertyTransforms.forEach(transform => transform.propertyTransform(newProp));
         });
     }
 

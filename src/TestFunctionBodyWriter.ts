@@ -3,9 +3,6 @@ import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper, StructurePropertyWrapper, StructureTypeWrapper} from "./wrappers";
 
 export class TestFunctionBodyWriter {
-    constructor(private readonly transformOptions: TransformOptions) {
-    }
-
     writeForStructure(structure: StructureWrapper, writer: CodeBlockWriter) {
         writer.write(`this.assertions.describe("${structure.getName()}", () => `).inlineBlock(() => {
             this.writeNullCheck(writer);
@@ -35,6 +32,16 @@ export class TestFunctionBodyWriter {
     }
 
     private writeTestForProperty(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {
+        if (prop.hasMatchedOptInTransforms()) {
+            writer.write(`if (typeof expected.${prop.getName()} !== "undefined")`).block(() => {
+                this.writeTestForPropertyInternal(structure, prop, writer);
+            });
+        }
+        else
+            this.writeTestForPropertyInternal(structure, prop, writer);
+    }
+
+    private writeTestForPropertyInternal(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {
         writer.write(`this.assertions.describe("${prop.getName()}", () => `).inlineBlock(() => {
             if (prop.shouldWriteOptionalAnyCheck()) {
                 writer.write("this.assertions.assertAny(() => ").inlineBlock(() => {
@@ -56,7 +63,19 @@ export class TestFunctionBodyWriter {
         structureType: StructureTypeWrapper,
         writer: CodeBlockWriter
     ) {
-        const matchedDefaultValueTransforms = this.transformOptions.getDefaultValueTransforms().filter(t => t.condition(prop.getDefinition(), structure.getDefinition()));
+        const matchedPropertyTransforms = prop.getMatchedPropertyTransforms();
+        if (matchedPropertyTransforms.length > 0) {
+            writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
+                writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                    matchedPropertyTransforms.forEach(transform => {
+                        transform.testWrite(writer);
+                    });
+                }).write(");");
+            }).write(`)(actual.${prop.getName()}, expected.${prop.getName()});`).newLine(); // todo: use the transformed properties name
+            return;
+        }
+
+        const matchedDefaultValueTransforms = prop.getMatchedDefaultTransforms();
         if (matchedDefaultValueTransforms.length > 0) {
             writer.writeLine(`let expectedValue = expected.${prop.getName()};`);
             writer.write(`if (typeof expectedValue === "undefined")`).block(() => {
@@ -121,12 +140,11 @@ export class TestFunctionBodyWriter {
     ) {
         const validDefinitions = structureType.getImmediateValidDefinitions();
         const hasValidDefinition = validDefinitions.length > 0;
-        const isTypeParameterType = structure.getTypeParameters().some(typeParam => typeParam.getName() === structureType.getText());
         const arrayType = structureType.getArrayType();
 
         if (arrayType != null) {
             writer.write(`this.assertions.it("should have the same length", () => `).inlineBlock(() => {
-                writer.writeLine(`this.assertions.strictEqual(${actualName}.length, ${expectedName}.length);`);
+                writer.writeLine(`this.assertions.strictEqual(${actualName}!.length, ${expectedName}!.length);`);
             }).write(");").newLine();
 
             writer.write(`for (let i = 0; i < (${expectedName} || []).length; i++)`).block(() => {
@@ -137,7 +155,7 @@ export class TestFunctionBodyWriter {
                 }).write(`)(${actualName}[i], ${expectedName}[i], i);`);
             });
         }
-        else if (isTypeParameterType)
+        else if (structureType.isTypeParameterType())
             writer.writeLine(`this.${structureType.getText()}TestRunner.runTest(${actualName}, ${expectedName});`);
         else if (hasValidDefinition) {
             const isSameClass = validDefinitions[0].getName() === structure.getName();
@@ -145,8 +163,7 @@ export class TestFunctionBodyWriter {
 
             writer.writeLine(`this.${runTestMethodName}(` +
                 `${actualName} as any as ${validDefinitions[0].getName()}, ` +
-                `${expectedName} as any as ${this.transformOptions
-                .getNameToTestStructureName(validDefinitions[0].getName())});`);
+                `${expectedName} as any as ${validDefinitions[0].getTestStructureName()});`);
         }
         else {
             writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {

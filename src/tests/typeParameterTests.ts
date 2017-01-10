@@ -138,12 +138,12 @@ export interface MyExtendsClassTestStructure extends MyTypeParameterClassTestStr
 }
 
 export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyExtendsClassTestStructure> {
-    private MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>;
+    private MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClass<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>;
 
     constructor(private readonly assertions: WrapperAssertions) {
     }
 
-    initialize(MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClassTestStructure<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
+    initialize(MyTypeParameterClassTestRunner: TestRunner<MyTypeParameterClass<string, MyClass<string>>, MyTypeParameterClassTestStructure<string, MyClassTestStructure<string>>>) {
         this.MyTypeParameterClassTestRunner = MyTypeParameterClassTestRunner;
     }
 

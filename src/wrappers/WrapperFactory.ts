@@ -29,15 +29,15 @@ export class WrapperFactory {
         return wrapper;
     }
 
-    getStructureProperty(definition: ClassOrInterfacePropertyType) {
-        return new StructurePropertyWrapper(this, definition);
+    getStructureProperty(parent: ClassOrInterfaceType, definition: ClassOrInterfacePropertyType) {
+        return new StructurePropertyWrapper(this, this.transformOptions, parent, definition);
     }
 
-    getStructureTypeParameter(definition: typeInfo.TypeParameterDefinition) {
-        return new StructureTypeParameterWrapper(this, definition);
+    getStructureTypeParameter(structure: StructureWrapper, typeParamDefinition: typeInfo.TypeParameterDefinition) {
+        return new StructureTypeParameterWrapper(this, structure, typeParamDefinition);
     }
 
-    getStructureType(definition: typeInfo.TypeDefinition) {
-        return new StructureTypeWrapper(this, this.transformOptions, definition);
+    getStructureType(structure: StructureWrapper, typeDef: typeInfo.TypeDefinition) {
+        return new StructureTypeWrapper(this, this.transformOptions, structure, typeDef);
     }
 }

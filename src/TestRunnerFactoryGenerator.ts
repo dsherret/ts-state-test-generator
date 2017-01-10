@@ -1,11 +1,7 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper, StructureTypeWrapper, StructureTypeParameterWrapper} from "./wrappers";
 
 export class TestRunnerFactoryGenerator {
-    constructor(private readonly transformOptions: TransformOptions) {
-    }
-
     fillTestFile(testFile: typeInfo.FileDefinition, structures: StructureWrapper[]) {
         const testRunnerFactory = testFile.addClass({
             name: "TestRunnerFactory",

@@ -28,7 +28,7 @@ export class StructureWrapper {
     }
 
     getProperties() {
-        return this.getValidProperties().map(p => this.wrapperFactory.getStructureProperty(p));
+        return this.getValidProperties().map(p => this.wrapperFactory.getStructureProperty(this.structure, p));
     }
 
     hasTypeParameters() {
@@ -40,7 +40,7 @@ export class StructureWrapper {
     }
 
     getTypeParameters() {
-        return this.structure.typeParameters.map(t => this.wrapperFactory.getStructureTypeParameter(t));
+        return this.structure.typeParameters.map(t => this.wrapperFactory.getStructureTypeParameter(this, t));
     }
 
     getValidExtendsTypes() {
@@ -50,7 +50,7 @@ export class StructureWrapper {
             const hasValidDefinition = extendsType.definitions.some(extendsTypeDefinition => extendsTypeDefinition instanceof typeInfo.ClassDefinition);
 
             if (hasValidDefinition)
-                validExtendsTypes.push(this.wrapperFactory.getStructureType(extendsType));
+                validExtendsTypes.push(this.wrapperFactory.getStructureType(this, extendsType));
         });
 
         return validExtendsTypes;

@@ -5,6 +5,7 @@ import {fileTemplate, itMessage, itAssertion, describeAssertion, nullAssertion, 
 
 describe(nameof(TestGenerator), () => {
     describe("inheritance tests", () => {
+        // todo: add implements tests and support
         const myBaseClass = typeInfo.createClass({
             name: "MyBaseClass",
             properties: [{ name: "prop", type: "Date" }]

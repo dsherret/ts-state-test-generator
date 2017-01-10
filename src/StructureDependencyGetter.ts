@@ -14,10 +14,12 @@ export class StructureDependencyGetter {
                 });
             });
 
-            const validExtendsStructures = structure.getValidExtendsStructures();
-            validExtendsStructures.forEach(extendsStructure => {
-                if (structures.indexOf(extendsStructure) === -1)
-                    structures.push(extendsStructure);
+            const validExtendsTypes = structure.getValidExtendsTypes();
+            validExtendsTypes.forEach(extendsType => {
+                extendsType.getAllValidDefinitions().forEach(structure => {
+                    if (structures.indexOf(structure) === -1)
+                        structures.push(structure);
+                });
             });
 
             structure.getTypeParameters().forEach(typeParam => {

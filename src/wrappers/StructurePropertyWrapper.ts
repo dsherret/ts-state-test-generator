@@ -1,5 +1,6 @@
 ﻿import * as typeInfo from "ts-type-info";
 import {WrapperFactory} from "./WrapperFactory";
+import {TransformOptions} from "./../TransformOptions";
 
 type ClassOrInterfaceType = typeInfo.InterfaceDefinition | typeInfo.ClassDefinition;
 type ClassOrInterfacePropertyType = typeInfo.InterfacePropertyDefinition | typeInfo.ClassPropertyDefinition;
@@ -7,12 +8,26 @@ type ClassOrInterfacePropertyType = typeInfo.InterfacePropertyDefinition | typeI
 export class StructurePropertyWrapper {
     constructor(
         private readonly wrapperFactory: WrapperFactory,
+        private readonly transformOptions: TransformOptions,
+        private readonly parent: ClassOrInterfaceType,
         private readonly prop: ClassOrInterfacePropertyType
     ) {
     }
 
     getName() {
         return this.prop.name;
+    }
+
+    hasMatchedOptInTransforms() {
+        return this.transformOptions.getOptInPropertyTransforms().some(p => p.condition(this.prop, this.parent));
+    }
+
+    getMatchedDefaultTransforms() {
+        return this.transformOptions.getDefaultValueTransforms().filter(p => p.condition(this.prop, this.parent));
+    }
+
+    getMatchedPropertyTransforms() {
+        return this.transformOptions.getPropertyTransforms().filter(p => p.condition(this.prop, this.parent));
     }
 
     getDefinition() {
@@ -24,7 +39,7 @@ export class StructurePropertyWrapper {
     }
 
     getType() {
-        return this.wrapperFactory.getStructureType(this.prop.type);
+        return this.wrapperFactory.getStructureType(this.wrapperFactory.getStructure(this.parent), this.prop.type);
     }
 
     shouldWriteOptionalAnyCheck() {
