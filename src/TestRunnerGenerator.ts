@@ -96,8 +96,6 @@ export class TestRunnerGenerator {
                 });
             });
         }
-
-        return testFile;
     }
 
     private addDependency(testRunnerClass: typeInfo.ClassDefinition, name: string, type: string) {

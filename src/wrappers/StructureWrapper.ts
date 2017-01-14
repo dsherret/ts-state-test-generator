@@ -99,6 +99,14 @@ export class StructureWrapper {
         return dependencies.map(d => d.dep);
     }
 
+    getCustomTestTransforms() {
+        return this.transformOptions.getCustomTestTransforms().filter(t => t.condition(this.structure));
+    }
+
+    getTestStructureTransforms() {
+        return this.transformOptions.getTestStructureTransforms().filter(t => t.condition(this.structure));
+    }
+
     private getPropertyDependencies() {
         const props = this.getValidProperties();
         const dependencies: ClassOrInterfaceType[] = [];

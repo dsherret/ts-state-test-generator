@@ -12,6 +12,9 @@ export class TestStructureGenerator {
         this.fillTestStructureTypeParameters(structure, testStructure);
         this.fillTestStructureProperties(structure, testStructure);
         this.addExtendsTypes(structure, testStructure);
+        structure.getTestStructureTransforms().forEach(transform => {
+            transform.transform(testStructure);
+        });
     }
 
     private fillTestStructureTypeParameters(structure: StructureWrapper, testStructure: typeInfo.InterfaceDefinition) {

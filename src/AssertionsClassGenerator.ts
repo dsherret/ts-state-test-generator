@@ -94,7 +94,7 @@ export class AssertionsClassGenerator {
                     });
                 }
             }, {
-                name: "checkNull",
+                name: "isNull",
                 parameters: [{ name: "actual", type: "any" }, { name: "expected", type: "any" }],
                 onWriteFunctionBody: writer => {
                     writer.write("if (actual != null || expected == null)").block(() => {

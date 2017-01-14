@@ -12,6 +12,10 @@ export class TestFunctionBodyWriter {
             structure.getProperties().forEach(prop => {
                 this.writeTestForProperty(structure, prop, writer);
             });
+
+            structure.getCustomTestTransforms().forEach(transform => {
+                transform.testWrite(writer, structure.getDefinition());
+            });
         }).write(");").newLine();
     }
 
@@ -20,9 +24,7 @@ export class TestFunctionBodyWriter {
     }
 
     private writeExtends(extendsStructure: StructureWrapper, writer: CodeBlockWriter) {
-        writer.writeLine(`this.${extendsStructure.getName()}TestRunner.runTest(` +
-            `actual, ` +
-            `expected);`);
+        writer.writeLine(`this.${extendsStructure.getName()}TestRunner.runTest(actual, expected);`);
     }
 
     private writeTestForProperty(structure: StructureWrapper, prop: StructurePropertyWrapper, writer: CodeBlockWriter) {

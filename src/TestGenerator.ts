@@ -28,6 +28,13 @@ export class TestGenerator {
         this.wrapperFactory = new WrapperFactory(this.transformOptions);
     }
 
+    addCustomTestTransform(
+        condition: (definition: typeInfo.ClassDefinition | typeInfo.InterfaceDefinition) => boolean,
+        testWrite: (writer: CodeBlockWriter) => void
+    ) {
+        this.transformOptions.addCustomTestTransform({ condition, testWrite });
+    }
+
     addDefaultValue(
         condition: (
             propertyDef: typeInfo.ClassPropertyDefinition | typeInfo.InterfacePropertyDefinition,
@@ -35,7 +42,7 @@ export class TestGenerator {
         ) => boolean,
         value: string
     ) {
-        this.transformOptions.addDefaultValue({ condition, value });
+        this.transformOptions.addDefaultValueTransform({ condition, value });
     }
 
     addOptInPropertyTransform(
@@ -58,6 +65,13 @@ export class TestGenerator {
         testWrite: (writer: CodeBlockWriter) => void
     ) {
         this.transformOptions.addPropertyTransform({ condition, propertyTransform, testWrite });
+    }
+
+    addTestStructureTransform(
+        condition: (definition: typeInfo.ClassDefinition | typeInfo.InterfaceDefinition) => boolean,
+        transform: (testStructure: typeInfo.InterfaceDefinition) => void
+    ) {
+        this.transformOptions.addTestStructureTransform({ condition, transform });
     }
 
     addTypeTransform(
