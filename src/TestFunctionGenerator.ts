@@ -15,7 +15,7 @@ export class TestFunctionGenerator {
                 }],
                 onWriteFunctionBody: writer => {
                     writer.writeLine("const factory = new TestRunnerFactory();");
-                    writer.writeLine(`factory.get${structure.getName()}TestRunner.runTest(actual, expected);`);
+                    writer.writeLine(`factory.get${structure.getName()}TestRunner().runTest(actual, expected);`);
                 }
             });
         }
