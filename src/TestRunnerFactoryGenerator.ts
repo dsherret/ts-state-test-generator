@@ -99,7 +99,7 @@ export class TestRunnerFactoryGenerator {
                             });
                             methodWriter.write(`)`);
                         }
-                    }
+                    };
 
                     structure.getInitializeDependencies().forEach((dep, i) => {
                         methodWriter.conditionalWrite(i > 0, ", ");

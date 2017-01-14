@@ -72,23 +72,38 @@ export class AssertionsClassGenerator {
                 parameters: [{ name: "checks", isRestParameter: true, type: "(() => void)[]" }],
                 onWriteFunctionBody: writer => {
                     writer.writeLine("this.assertAnyCount++;");
-                    writer.writeLine("let didOverallPass = false");
-                    writer.write("for (const check of checks)").block(() => {
-                        writer.writeLine("let didPass = true;");
-                        writer.write("try ").inlineBlock(() => {
-                            writer.writeLine("check();");
-                        }).write(" catch (err)").block(() => {
-                            writer.writeLine("didPass = false;");
+                    writer.write("try ").inlineBlock(() => {
+                        writer.writeLine("let didOverallPass = false");
+                        writer.write("for (const check of checks)").block(() => {
+                            writer.writeLine("let didPass = true;");
+                            writer.write("try ").inlineBlock(() => {
+                                writer.writeLine("check();");
+                            }).write(" catch (err)").block(() => {
+                                writer.writeLine("didPass = false;");
+                            });
+                            writer.write("if (didPass)").block(() => {
+                                writer.writeLine("didOverallPass = true;");
+                                writer.writeLine("break;");
+                            });
                         });
-                        writer.write("if (didPass)").block(() => {
-                            writer.writeLine("didOverallPass = true;");
-                            writer.writeLine("break;");
+                        writer.write("if (!didOverallPass)").block(() => {
+                            writer.writeLine(`throw new Error("Did not equal any of the union types.");`);
                         });
+                    }).write(" finally ").inlineBlock(() => {
+                        writer.writeLine("this.assertAnyCount--;");
                     });
-                    writer.write("if (!didOverallPass)").block(() => {
-                        writer.writeLine(`throw new Error("Did not equal any of the union types.");`);
+                }
+            }, {
+                name: "checkNull",
+                parameters: [{ name: "actual", type: "any" }, { name: "expected", type: "any" }],
+                onWriteFunctionBody: writer => {
+                    writer.write("if (actual != null || expected == null)").block(() => {
+                        writer.writeLine("return false;");
                     });
-                    writer.writeLine("this.assertAnyCount--;");
+                    writer.write(`this.it("should not be null", () => `).inlineBlock(() => {
+                        writer.writeLine(`throw new Error("It's null");`);
+                    }).write(");");
+                    writer.writeLine("return true;");
                 }
             }]
         });

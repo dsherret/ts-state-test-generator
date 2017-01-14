@@ -1,5 +1,4 @@
-﻿import CodeBlockWriter from "code-block-writer";
-import * as typeInfo from "ts-type-info";
+﻿import * as typeInfo from "ts-type-info";
 
 export interface OptInPropertyTransform {
     condition: (

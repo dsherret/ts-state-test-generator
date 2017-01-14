@@ -1,5 +1,4 @@
 ﻿import CodeBlockWriter from "code-block-writer";
-import {TransformOptions} from "./TransformOptions";
 import {StructureWrapper, StructurePropertyWrapper, StructureTypeWrapper} from "./wrappers";
 
 export class TestFunctionBodyWriter {
@@ -17,12 +16,7 @@ export class TestFunctionBodyWriter {
     }
 
     private writeNullCheck(writer: CodeBlockWriter) {
-        writer.write("if (actual == null && expected != null)").block(() => {
-            writer.write(`this.assertions.it("should not be null", () => `).inlineBlock(() => {
-                writer.write(`throw new Error("It's null");`);
-            }).write(");").newLine();
-            writer.writeLine("return;");
-        });
+        writer.writeLine("if (this.assertions.isNull(actual, expected)) return;");
     }
 
     private writeExtends(extendsStructure: StructureWrapper, writer: CodeBlockWriter) {
@@ -63,31 +57,28 @@ export class TestFunctionBodyWriter {
         structureType: StructureTypeWrapper,
         writer: CodeBlockWriter
     ) {
-        const matchedPropertyTransforms = prop.getMatchedPropertyTransforms();
-        if (matchedPropertyTransforms.length > 0) {
-            writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
-                writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
-                    matchedPropertyTransforms.forEach(transform => {
-                        transform.testWrite(writer);
-                    });
-                }).write(");");
-            }).write(`)(actual.${prop.getName()}, expected.${prop.getName()});`).newLine(); // todo: use the transformed properties name
-            return;
-        }
-
         const matchedDefaultValueTransforms = prop.getMatchedDefaultTransforms();
+        // todo: use the transformed properties name
+        writer.writeLine(`let actualValue = actual.${prop.getName()};`);
+        writer.writeLine(`let expectedValue = expected.${prop.getName()};`);
         if (matchedDefaultValueTransforms.length > 0) {
-            writer.writeLine(`let expectedValue = expected.${prop.getName()};`);
             writer.write(`if (typeof expectedValue === "undefined")`).block(() => {
                 writer.writeLine(`expectedValue = ${matchedDefaultValueTransforms[0].value};`);
             });
+        }
+
+        const matchedPropertyTransforms = prop.getMatchedPropertyTransforms();
+        if (matchedPropertyTransforms.length > 0) {
+            // todo: use the transformed properties name
             writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
-                writer.writeLine(`this.assertions.strictEqual(actual.${prop.getName()}, expectedValue);`);
+                matchedPropertyTransforms.forEach(transform => {
+                    transform.testWrite(writer);
+                });
             }).write(");");
             return;
         }
 
-        this.writeTypeTest(structure, structureType, writer, `actual.${prop.getName()}`, `expected.${prop.getName()}`);
+        this.writeTypeTest(structure, structureType, writer, `actualValue`, `expectedValue`);
     }
 
     private writeTypeTest(
@@ -112,14 +103,16 @@ export class TestFunctionBodyWriter {
         const unionTypes = structureType.getUnionTypes();
         const intersectionTypes = structureType.getIntersectionTypes();
         if (unionTypes.length > 0) {
-            writer.write("this.assertions.assertAny(");
-            unionTypes.forEach((subType, i) => {
-                writer.conditionalWrite(i !== 0, ", ");
-                writer.write("() => ").inlineBlock(() => {
-                    this.writeTypeTest(structure, subType, writer, actualName, expectedName);
+            writer.write(`this.assertions.it("should equal one of the union types", () => `).inlineBlock(() => {
+                writer.write("this.assertions.assertAny(");
+                unionTypes.forEach((subType, i) => {
+                    writer.conditionalWrite(i !== 0, ", ");
+                    writer.write("() => ").inlineBlock(() => {
+                        this.writeTypeTest(structure, subType, writer, actualName, expectedName);
+                    });
                 });
-            });
-            writer.write(");").newLine();
+                writer.write(");").newLine();
+            }).write(");").newLine();
         }
         else if (intersectionTypes.length > 0) {
             intersectionTypes.forEach(subType => {
@@ -152,7 +145,7 @@ export class TestFunctionBodyWriter {
                     writer.write("this.assertions.describe(`index ${i}`, () => ").inlineBlock(() => {
                         this.writeTypeTest(structure, arrayType, writer, `actualValue`, `expectedValue`);
                     }).write(");");
-                }).write(`)(${actualName}[i], ${expectedName}[i], i);`);
+                }).write(`)(${actualName}[i], ${expectedName}![i], i);`);
             });
         }
         else if (structureType.isTypeParameterType())

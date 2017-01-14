@@ -1,5 +1,4 @@
 ﻿import * as typeInfo from "ts-type-info";
-import {TransformOptions} from "./TransformOptions";
 import {TypeTransformer} from "./TypeTransformer";
 import {StructureWrapper} from "./wrappers";
 
@@ -30,8 +29,7 @@ export class TestStructureGenerator {
             const propertyTransforms = prop.getMatchedPropertyTransforms();
             const newProp = testStructure.addProperty({
                 name: prop.getName(),
-                // todo: maybe no propTransforms.length === 0 here
-                isOptional: prop.getIsOptional() || (propertyTransforms.length === 0 && prop.getMatchedDefaultTransforms().length > 0) || prop.hasMatchedOptInTransforms()
+                isOptional: prop.getIsOptional() || prop.getMatchedDefaultTransforms().length > 0 || prop.hasMatchedOptInTransforms()
             });
             newProp.type = this.typeTransformer.getNewType(prop.getType());
 

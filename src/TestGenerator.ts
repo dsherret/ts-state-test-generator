@@ -8,6 +8,7 @@ import {TestRunnerArgsCacheGenerator} from "./TestRunnerArgsCacheGenerator";
 import {StructureDependencyGetter} from "./StructureDependencyGetter";
 import {StateTestRunnerGenerator} from "./StateTestRunnerGenerator";
 import {TestRunnerFactoryGenerator} from "./TestRunnerFactoryGenerator";
+import {TestFunctionGenerator} from "./TestFunctionGenerator";
 import {WrapperFactory} from "./wrappers";
 
 export class TestGenerator {
@@ -18,6 +19,7 @@ export class TestGenerator {
     private readonly testRunnerGenerator = new TestRunnerGenerator();
     private readonly stateTestRunnerGenerator = new StateTestRunnerGenerator();
     private readonly testRunnerFactoryGenerator = new TestRunnerFactoryGenerator();
+    private readonly testFunctionGenerator = new TestFunctionGenerator();
     private readonly transformOptions: TransformOptions;
     private readonly wrapperFactory: WrapperFactory;
 
@@ -75,6 +77,7 @@ export class TestGenerator {
         this.testRunnerFactoryGenerator.fillTestFile(testFile, structureWrappers);
         this.stateTestRunnerGenerator.fillTestFile(testFile, structureWrappers);
         this.testRunnerGenerator.fillTestFile(testFile, structureWrappers);
+        this.testFunctionGenerator.fillTestFile(testFile, structureWrappers);
         return testFile;
     }
 }
