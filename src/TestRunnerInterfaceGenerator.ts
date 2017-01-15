@@ -13,13 +13,6 @@ export class TestRunnerInterfaceGenerator {
             }]
         });
 
-        file.addInterface({
-            name: "TestRunnerConstructor",
-            isExported: true,
-            typeParameters: [{ name: "T", constraintType: "TestRunner<any, any>" }],
-            newSignatures: [{ returnType: "T" }]
-        });
-
         file.addClass({
             name: "StrictEqualTestRunner",
             implementsTypes: ["TestRunner<any, any>"],
@@ -37,7 +30,9 @@ export class TestRunnerInterfaceGenerator {
                 returnType: "void",
                 parameters: [{ name: "actual", type: "any" }, { name: "expected", type: "any" }],
                 onWriteFunctionBody: writer => {
-                    writer.writeLine("this.assertions.strictEqual(actual, expected);");
+                    writer.write(`this.assertions.it("should have the same value", () => `).inlineBlock(() => {
+                        writer.writeLine("this.assertions.strictEqual(actual, expected);");
+                    }).write(");");
                 }
             }]
         });

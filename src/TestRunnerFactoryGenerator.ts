@@ -87,7 +87,10 @@ export class TestRunnerFactoryGenerator {
 
                     const writeType = (typeDef: StructureTypeWrapper) => {
                         const validExtendsDefs = typeDef.getImmediateValidDefinitions();
-                        if (validExtendsDefs.length === 0)
+                        if (typeDef.isTypeParameterType()) {
+                            methodWriter.write(`${typeDef.getText()}TestRunner`);
+                        }
+                        else if (validExtendsDefs.length === 0)
                             methodWriter.write(`this.getStrictEqualTestRunner()`);
                         else {
                             const typeArgs = typeDef.getTypeArguments();
