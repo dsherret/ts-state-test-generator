@@ -5,8 +5,6 @@
 [![Coverage Status](https://coveralls.io/repos/dsherret/ts-state-test-generator/badge.svg?branch=master&service=github)](https://coveralls.io/github/dsherret/ts-state-test-generator?branch=master)
 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
 
-Installing:
-
 ```
 npm install --save-dev ts-type-info
 npm install --save-dev ts-state-tests-generator
@@ -35,8 +33,6 @@ This tool code generates tests methods that accurately test the state of an obje
 
 ### TypeScript classes/interfaces to test
 
-Given these files:
-
 ```typescript
 // src/models.ts
 export * from "./models/Person";
@@ -61,7 +57,7 @@ export class Note {
 
 ### Code generate the test helpers
 
-This will code generate a test helper file for your model classes.
+This will code generate a test helper file for the model classes.
 
 ```javascript
 // generateTestHelpers.js
@@ -117,7 +113,7 @@ testFile.onBeforeWrite = writer => writer.writeLine("/* tslint:disable */").writ
 fs.writeFile(path.join(__dirname, "src/tests/testHelpers.ts"), testFile.write());
 ```
 
-### Using Generated Code
+### Using generated code
 
 It's best to look at the generated code so you can get an idea about how to use it (there are more advanced ways to use it than shown here).
 
