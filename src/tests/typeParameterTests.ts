@@ -45,7 +45,7 @@ describe(nameof(TestGenerator), () => {
         extendsClassExtendsTypeTypeArg2.typeArguments.push(extendsClassExtendsTypeTypeArg1);
         myExtendsClass.extendsTypes[0].typeArguments.push(extendsClassExtendsTypeTypeArg2);
 
-        const generator = new TestGenerator({});
+        const generator = new TestGenerator();
         const structuresFile = generator.getTestFile([myExtendsClass]);
 
         it("should write out the file", () => {

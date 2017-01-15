@@ -22,7 +22,7 @@ describe(nameof(TestGenerator), () => {
         myOtherExtendsClass.addExtends(myBaseClass);
         myOtherExtendsClass.extendsTypes[0].definitions.push(myBaseClass);
 
-        const generator = new TestGenerator({});
+        const generator = new TestGenerator();
         const structuresFile = generator.getTestFile([myExtendsClass, myOtherExtendsClass]); // do not pass in the base class (for testing purposes)
 
         it("should write out the file", () => {

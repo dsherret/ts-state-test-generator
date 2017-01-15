@@ -66,7 +66,7 @@ describe(nameof(TestGenerator), () => {
         const propWithOptionalDefinition = myInterfaceDef.getProperty("propWithOptionalDefinition")!;
         propWithOptionalDefinition.type.definitions.push(myClassDef);
 
-        const generator = new TestGenerator({});
+        const generator = new TestGenerator();
         generator.addTypeTransform(
             typeDef => typeDef.text === "MyInterfaceToTransform",
             newTypeDef => newTypeDef.text = "string",

@@ -28,7 +28,7 @@ describe(nameof(TestGenerator), () => {
         prop2.type.arrayElementType = propArrayElementType;
         prop2.type.text = "(number[] | MyClass)[]";
 
-        const generator = new TestGenerator({});
+        const generator = new TestGenerator();
         const structuresFile = generator.getTestFile([myClass]);
 
         it("should write out the file", () => {

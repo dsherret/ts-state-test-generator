@@ -111,7 +111,7 @@ testFile.addImport({
 });
 
 // add a statement to remind people not to edit this file
-testFile.onBeforeWrite = writer => writer.writeLine("// AUTO GENERATED CODE - DO NOT EDIT!").newLine();
+testFile.onBeforeWrite = writer => writer.writeLine("/* tslint:disable */").writeLine("// AUTO GENERATED CODE - DO NOT EDIT!").newLine();
 
 // write out the file
 fs.writeFile(path.join(__dirname, "src/tests/testHelpers.ts"), testFile.write());
