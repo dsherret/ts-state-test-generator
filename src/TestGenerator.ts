@@ -23,7 +23,8 @@ export class TestGenerator {
     private readonly transformOptions: TransformOptions;
     private readonly wrapperFactory: WrapperFactory;
 
-    constructor(opts: { testStructurePrefix?: string; testStructureSuffix?: string; }) {
+    constructor() {
+        const opts: { testStructurePrefix?: string; testStructureSuffix?: string; } = {};
         this.transformOptions = new TransformOptions(opts);
         this.wrapperFactory = new WrapperFactory(this.transformOptions);
     }
