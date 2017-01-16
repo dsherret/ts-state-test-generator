@@ -62,10 +62,10 @@ This will code generate a test helper file for the interfaces.
 ```javascript
 // generateTestHelpers.js
 // I usually just do this in a javascript file so I don't need to compile it (it's just a development script)
-var path = require("path");
-var fs = require("fs");
-var getInfoFromFiles = require("ts-type-info").getInfoFromFiles;
-var TestGenerator = require("ts-state-test-generator").TestGenerator;
+const path = require("path");
+const fs = require("fs");
+const getInfoFromFiles = require("ts-type-info").getInfoFromFiles;
+const TestGenerator = require("ts-state-test-generator").TestGenerator;
 
 // get the info from the files using ts-type-info
 const typeInfo = getInfoFromFiles([
