@@ -7,7 +7,7 @@
 
 ```
 npm install --save-dev ts-type-info
-npm install --save-dev ts-state-tests-generator
+npm install --save-dev ts-state-test-generator
 ```
 
 This tool code generates test helper functions that test the state of an object based on its type information. It's currently experimental and subject to change.
