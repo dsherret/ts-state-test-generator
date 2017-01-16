@@ -10,11 +10,11 @@ npm install --save-dev ts-type-info
 npm install --save-dev ts-state-tests-generator
 ```
 
-This tool code generates tests methods that accurately test the state of an object. It's currently experimental and subject to change.
+This tool code generates test helper functions that test the state of an object based on its type information. It's currently experimental and subject to change.
 
 ## Benefits
 
-* Write and maintain less code. I replaced 2000 lines of code with 250 in one of my projects and discovered a few bugs in my previous test methods.
+* Write and maintain less code. I replaced 2500 lines of code with 250 in one of my projects and discovered a few bugs in my previous test methods.
 * When your class or interface properties change, simply re-run the code generation process for updated code.
 * Get static typing in the expected object.
 * Expected object can be different than actual object.
