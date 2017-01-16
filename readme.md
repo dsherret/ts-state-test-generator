@@ -55,13 +55,13 @@ export interface Note {
 ```
 
 
-### Code generate the test helpers
+### Code generate the test helpers (development script)
 
 This will code generate a test helper file for the interfaces.
 
 ```javascript
 // generateTestHelpers.js
-// i usually just do this in a javascript file so I don't need to compile it (it's just a build script)
+// I usually just do this in a javascript file so I don't need to compile it (it's just a development script)
 var path = require("path");
 var fs = require("fs");
 var getInfoFromFiles = require("ts-type-info").getInfoFromFiles;
@@ -123,25 +123,31 @@ Here's an example:
 // src/tests/someTest.ts
 import {runPersonTests} from "./testHelpers";
 
-let person = functionThatReturnsAPersonWithNoNotes();
+describe("something being tested", () => {
+    it("should return a person with no notes", () => {
+        const person = functionThatReturnsAPersonWithNoNotes();
 
-// tests for:
-// * name to be "David"
-// * notes to be [] (default value specified in code generation)
-runPersonTests(person, { name: "David" });
+        // tests for:
+        // * name to be "David"
+        // * notes to be [] (default value specified in code generation)
+        runPersonTests(person, { name: "David" });
+    });
 
-person = functionThatReturnsAPersonWithOneNote();
+    it("should return a person with one note", () => {
+        const person = functionThatReturnsAPersonWithOneNote();
 
-// tests for:
-// * name to be "David"
-// * notes to have text "Hello there!"
-// * isPinned to be false (default value specified in code generation)
-// * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
-runPersonTests(person, {
-    name: "David",
-    notes: [{
-        text: "Hello there!"
-    }]
+        // tests for:
+        // * name to be "David"
+        // * notes to have text "Hello there!"
+        // * isPinned to be false (default value specified in code generation)
+        // * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
+        runPersonTests(person, {
+            name: "David",
+            notes: [{
+                text: "Hello there!"
+            }]
+        });
+    });
 });
 ```
 
