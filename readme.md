@@ -123,31 +123,29 @@ Here's an example:
 // src/tests/someTest.ts
 import {runPersonTests} from "./testHelpers";
 
-describe("something being tested", () => {
-    it("should return a person with no notes", () => {
-        const person = functionThatReturnsAPersonWithNoNotes();
+describe("functionThatReturnsAPersonWithNoNotes", () => {
+	const person = functionThatReturnsAPersonWithNoNotes();
 
-        // tests for:
-        // * name to be "David"
-        // * notes to be [] (default value specified in code generation)
-        runPersonTests(person, { name: "David" });
-    });
+	// tests for:
+	// * name to be "David"
+	// * notes to be [] (default value specified in code generation)
+	runPersonTests(person, { name: "David" });
+});
 
-    it("should return a person with one note", () => {
-        const person = functionThatReturnsAPersonWithOneNote();
+describe("functionThatReturnsAPersonWithOneNote", () => {
+	const person = functionThatReturnsAPersonWithOneNote();
 
-        // tests for:
-        // * name to be "David"
-        // * notes to have text "Hello there!"
-        // * isPinned to be false (default value specified in code generation)
-        // * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
-        runPersonTests(person, {
-            name: "David",
-            notes: [{
-                text: "Hello there!"
-            }]
-        });
-    });
+	// tests for:
+	// * name to be "David"
+	// * notes to have text "Hello there!"
+	// * isPinned to be false (default value specified in code generation)
+	// * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
+	runPersonTests(person, {
+		name: "David",
+		notes: [{
+			text: "Hello there!"
+		}]
+	});
 });
 ```
 
