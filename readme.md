@@ -7,7 +7,7 @@
 
 ```
 npm install --save-dev ts-type-info
-npm install --save-dev ts-state-tests-generator
+npm install --save-dev ts-state-test-generator
 ```
 
 This tool code generates test helper functions that test the state of an object based on its type information. It's currently experimental and subject to change.
@@ -31,7 +31,7 @@ This tool code generates test helper functions that test the state of an object 
 
 ## Example
 
-### TypeScript classes/interfaces to test
+### TypeScript classes & interfaces to test
 
 ```typescript
 // src/models.ts
@@ -41,13 +41,13 @@ export * from "./models/Note";
 // src/models/Person.ts
 import {Note} from "./Note";
 
-export class Person {
-    name: "MyName";
+export interface Person {
+    name: string;
     notes: Note[];
 }
 
 // src/models/Note.ts
-export class Note {
+export interface Note {
     creationDate: Date;
     text: string;
     isPinned: boolean;
@@ -55,17 +55,17 @@ export class Note {
 ```
 
 
-### Code generate the test helpers
+### Code generate the test helpers (development script)
 
-This will code generate a test helper file for the model classes.
+This will code generate a test helper file for the interfaces.
 
 ```javascript
 // generateTestHelpers.js
-// i usually just do this in a javascript file so I don't need to compile it (it's just a build script)
-var path = require("path");
-var fs = require("fs");
-var getInfoFromFiles = require("ts-type-info").getInfoFromFiles;
-var TestGenerator = require("ts-state-test-generator").TestGenerator;
+// I usually just do this in a javascript file so I don't need to compile it (it's just a development script)
+const path = require("path");
+const fs = require("fs");
+const getInfoFromFiles = require("ts-type-info").getInfoFromFiles;
+const TestGenerator = require("ts-state-test-generator").TestGenerator;
 
 // get the info from the files using ts-type-info
 const typeInfo = getInfoFromFiles([
@@ -80,26 +80,26 @@ const typeInfo = getInfoFromFiles([
 // ex: removing public properties whose name matches a certain pattern
 // see the ts-type-info project for how to manipulate it
 
-// get the classes you want from typeInfo
-const classes = [];
+// get the interfaces and/or classes you want from typeInfo
+const interfaces = [];
 typeInfo.files.filter(f => f.fileName.indexOf("/Models/") >= 0).forEach(f => {
-    classes.push.apply(classes, f.classes); // or use spread
+    interfaces.push.apply(interfaces, f.interfaces); // or use spread
 });
 
 // create the test generator
 const generator = new TestGenerator();
 // add any transforms
-generator.addDefaultValue((prop, classDef) => classDef.name === "Note" && prop.name === "isPinned", "false"); // adds a default test value
+generator.addDefaultValue((prop, interfaceDef) => interfaceDef.name === "Note" && prop.name === "isPinned", "false"); // adds a default test value
 generator.addDefaultValue(prop => prop.type.isArrayType(), "[]");
-generator.addOptInPropertyTransform((prop, classDef) => classDef.name === "Note" && prop.name === "creationDate"); // makes this property so its only tested for when provided
+generator.addOptInPropertyTransform((prop, interfaceDef) => interfaceDef.name === "Note" && prop.name === "creationDate"); // makes this property so its only tested for when provided
 // - there is also: addPropertyTransform, addTestStructureTransform, addCustomTestTransform. I need to work on how exactly I want those to work so those are subject to change
 // - if you have any ideas about some other transform let me know
 
 // get the test file
-const testFile = generator.getTestFile(classes);
+const testFile = generator.getTestFile(interfaces);
 
 // add necessary imports to the file based on where you are going to place it
-const modelNamedImports = classes.map(c => c.name);
+const modelNamedImports = interfaces.map(c => c.name);
 // modelNamedImports.push("SomeOtherType"); // you could add additional imports here
 testFile.addImport({
     namedImports: modelNamedImports.map(name => ({ name })),
@@ -123,25 +123,29 @@ Here's an example:
 // src/tests/someTest.ts
 import {runPersonTests} from "./testHelpers";
 
-let person = functionThatReturnsAPersonWithNoNotes();
+describe("functionThatReturnsAPersonWithNoNotes", () => {
+	const person = functionThatReturnsAPersonWithNoNotes();
 
-// tests for:
-// * name to be "David"
-// * notes to be [] (default value specified in code generation)
-runPersonTests(person, { name: "David" });
+	// tests for:
+	// * name to be "David"
+	// * notes to be [] (default value specified in code generation)
+	runPersonTests(person, { name: "David" });
+});
 
-person = functionThatReturnsAPersonWithOneNote();
+describe("functionThatReturnsAPersonWithOneNote", () => {
+	const person = functionThatReturnsAPersonWithOneNote();
 
-// tests for:
-// * name to be "David"
-// * notes to have text "Hello there!"
-// * isPinned to be false (default value specified in code generation)
-// * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
-runPersonTests(person, {
-    name: "David",
-    notes: [{
-        text: "Hello there!"
-    }]
+	// tests for:
+	// * name to be "David"
+	// * notes to have text "Hello there!"
+	// * isPinned to be false (default value specified in code generation)
+	// * does not test `creationDate` because that's an opt in property (would only test if provided in the expected object)
+	runPersonTests(person, {
+		name: "David",
+		notes: [{
+			text: "Hello there!"
+		}]
+	});
 });
 ```
 
