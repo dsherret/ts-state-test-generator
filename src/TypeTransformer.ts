@@ -19,7 +19,8 @@ export class TypeTransformer {
         const intersectionTypes = structureType.getIntersectionTypes();
         const arrayType = structureType.getArrayType();
         if (unionTypes.length > 0) {
-            unionTypes.forEach(subType => {
+            const filteredUnionTypes = unionTypes.filter(f => !f.shouldIgnoreType());
+            filteredUnionTypes.forEach(subType => {
                 const newSubType = this.getNewType(subType);
                 newTypeDef.unionTypes.push(newSubType);
             });
@@ -27,7 +28,8 @@ export class TypeTransformer {
             newTypeDef.text = `(${newTypeDef.unionTypes.map(t => t.text).join(" | ")})`;
         }
         else if (intersectionTypes.length > 0) {
-            intersectionTypes.forEach(subType => {
+            const filteredIntersectionTypes = intersectionTypes.filter(f => !f.shouldIgnoreType());
+            filteredIntersectionTypes.forEach(subType => {
                 const newSubType = this.getNewType(subType);
                 newTypeDef.intersectionTypes.push(newSubType);
             });

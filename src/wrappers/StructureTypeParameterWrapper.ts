@@ -1,4 +1,5 @@
 ﻿import * as typeInfo from "ts-type-info";
+import {Memoize} from "./../utils";
 import {StructureWrapper} from "./StructureWrapper";
 import {WrapperFactory} from "./WrapperFactory";
 
@@ -18,6 +19,7 @@ export class StructureTypeParameterWrapper {
         return this.getName() + "Expected";
     }
 
+    @Memoize
     getConstraintType() {
         return (this.typeParam.constraintType == null) ? null : this.wrapperFactory.getStructureType(this.structure, this.typeParam.constraintType!);
     }

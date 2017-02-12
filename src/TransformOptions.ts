@@ -1,10 +1,13 @@
-﻿import {TypeTransform, DefaultValueTransform, PropertyTransform, OptInPropertyTransform, TestStructureTransform, CustomTestTransform} from "./transforms";
+﻿import {TypeTransform, DefaultValueTransform, PropertyTransform, OptInPropertyTransform, TestStructureTransform, CustomTestTransform,
+    IgnorePropertyTransform, IgnoreTypeTransform} from "./transforms";
 
 export class TransformOptions {
     private readonly testStructureSuffix: string;
     private readonly testStructurePrefix: string;
     private readonly customTestTransforms: CustomTestTransform[] = [];
     private readonly defaultValueTransforms: DefaultValueTransform[] = [];
+    private readonly ignorePropertyTransforms: IgnorePropertyTransform[] = [];
+    private readonly ignoreTypeTransforms: IgnoreTypeTransform[] = [];
     private readonly optInPropertyTransforms: OptInPropertyTransform[] = [];
     private readonly propertyTransforms: PropertyTransform[] = [];
     private readonly testStructureTransforms: TestStructureTransform[] = [];
@@ -21,6 +24,14 @@ export class TransformOptions {
 
     addDefaultValueTransform(defaultValueTransform: DefaultValueTransform) {
         this.defaultValueTransforms.push(defaultValueTransform);
+    }
+
+    addIgnorePropertyTransform(ignorePropertyTransform: IgnorePropertyTransform) {
+        this.ignorePropertyTransforms.push(ignorePropertyTransform);
+    }
+
+    addIgnoreTypeTransform(ignoreTypeTransform: IgnoreTypeTransform) {
+        this.ignoreTypeTransforms.push(ignoreTypeTransform);
     }
 
     addOptInPropertyTransform(optInPropertyTransform: OptInPropertyTransform) {
@@ -45,6 +56,14 @@ export class TransformOptions {
 
     getDefaultValueTransforms() {
         return this.defaultValueTransforms;
+    }
+
+    getIgnorePropertyTransforms() {
+        return this.ignorePropertyTransforms;
+    }
+
+    getIgnoreTypeTransforms() {
+        return this.ignoreTypeTransforms;
     }
 
     getOptInPropertyTransforms() {

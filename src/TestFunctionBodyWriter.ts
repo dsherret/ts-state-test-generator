@@ -59,6 +59,9 @@ export class TestFunctionBodyWriter {
         structureType: StructureTypeWrapper,
         writer: CodeBlockWriter
     ) {
+        if (structureType.shouldIgnoreType())
+            return;
+
         const matchedDefaultValueTransforms = prop.getMatchedDefaultTransforms();
         // todo: use the transformed properties name
         writer.writeLine(`let actualValue = actual.${prop.getName()};`);
@@ -90,6 +93,9 @@ export class TestFunctionBodyWriter {
         actualName: string,
         expectedName: string
     ) {
+        if (structureType.shouldIgnoreType())
+            return;
+
         const matchedTypeTransforms = structureType.getMatchedTypeTransforms();
         if (matchedTypeTransforms.length > 0) {
             writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
@@ -102,15 +108,19 @@ export class TestFunctionBodyWriter {
             return;
         }
 
-        const unionTypes = structureType.getUnionTypes();
-        const intersectionTypes = structureType.getIntersectionTypes();
-        if (unionTypes.length > 0) {
+        const unionTypes = structureType.getUnionTypes().filter(t => !t.shouldIgnoreType());
+        const intersectionTypes = structureType.getIntersectionTypes().filter(t => !t.shouldIgnoreType());
+        if (unionTypes.length === 1)
+            this.writeNonUnionAndIntersectionTypeTest(structure, unionTypes[0], writer, actualName, expectedName);
+        if (unionTypes.length > 1) {
             writer.write(`this.assertions.it("should equal one of the union types", () => `).inlineBlock(() => {
                 writer.write("this.assertions.assertAny(");
                 unionTypes.forEach((subType, i) => {
                     writer.conditionalWrite(i !== 0, ", ");
                     writer.write("() => ").inlineBlock(() => {
-                        this.writeTypeTest(structure, subType, writer, actualName, expectedName);
+                        writer.write("((actualValue, expectedValue) => ").inlineBlock(() => {
+                            this.writeTypeTest(structure, subType, writer, actualName, expectedName);
+                        }).write(`)(${actualName} as ${subType.getText()}, ${expectedName} as ${subType.getExpectedText()});`).newLine();
                     });
                 });
                 writer.write(");").newLine();

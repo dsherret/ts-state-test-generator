@@ -46,6 +46,18 @@ export class TestGenerator {
         this.transformOptions.addDefaultValueTransform({ condition, value });
     }
 
+    addIgnorePropertyTransform(condition: (
+            propertyDef: typeInfo.ClassPropertyDefinition | typeInfo.InterfacePropertyDefinition,
+            parent?: typeInfo.ClassDefinition | typeInfo.InterfaceDefinition
+        ) => boolean
+    ) {
+        this.transformOptions.addIgnorePropertyTransform({ condition });
+    }
+
+    addIgnoreTypeTransform(condition: (typeDef: typeInfo.TypeDefinition) => boolean) {
+        this.transformOptions.addIgnoreTypeTransform({ condition });
+    }
+
     addOptInPropertyTransform(
         condition: (
             propertyDef: typeInfo.ClassPropertyDefinition | typeInfo.InterfacePropertyDefinition,
@@ -56,7 +68,7 @@ export class TestGenerator {
     }
 
     // todo: separate transforms from tests
-    // todo: have ability to add it message when writing test
+    // todo: have ability to add "it" message when writing test
     addPropertyTransform(
         condition: (
             propertyDef: typeInfo.ClassPropertyDefinition | typeInfo.InterfacePropertyDefinition,
