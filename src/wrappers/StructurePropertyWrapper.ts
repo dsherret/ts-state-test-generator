@@ -66,10 +66,6 @@ export class StructurePropertyWrapper {
 
     @Memoize
     getAllValidTypeStructures() {
-        const defs = this.prop.type.getAllDefinitions().filter(propTypeDefinition =>
-            propTypeDefinition instanceof typeInfo.ClassDefinition ||
-            propTypeDefinition instanceof typeInfo.InterfaceDefinition) as ClassOrInterfaceType[];
-
-        return defs.map(d => this.wrapperFactory.getStructure(d));
+        return this.getType().getAllValidDefinitions();
     }
 }

@@ -49,14 +49,14 @@ export class StructureWrapper {
     @Memoize
     getValidExtendsTypes() {
         const extendsTypes = this.getExtendsTypes();
-        return extendsTypes.filter(t => !t.shouldIgnoreType() && t.getAllValidDefinitions().length > 0);
+        return extendsTypes.filter(t => !t.shouldIgnoreType() && t.getImmediateValidDefinitions().length > 0);
     }
 
     @Memoize
     getValidExtendsStructures() {
         const validExtendsDefinitions: StructureWrapper[] = [];
         this.getExtendsTypes().forEach(extendsType => {
-            validExtendsDefinitions.push(...extendsType.getAllValidDefinitions());
+            validExtendsDefinitions.push(...extendsType.getImmediateValidDefinitions());
         });
         return validExtendsDefinitions;
     }

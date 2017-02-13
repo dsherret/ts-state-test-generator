@@ -6,7 +6,7 @@ export class TestFunctionGenerator {
         for (const structure of structures) {
             // todo: support structures with type parameters
             if (structure.getTypeParameters().length > 0)
-                break;
+                continue;
 
             testFile.addFunction({
                 name: `run${structure.getName()}Tests`,
