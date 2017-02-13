@@ -294,3 +294,7 @@ export class MyExtendsClassTestRunner implements TestRunner<MyExtendsClass, MyEx
         });
     }
 }
+
+export function runMyExtendsClassTests(actual: MyExtendsClass, expected: MyExtendsClassTestStructure) {
+    new TestRunnerFactory().getMyExtendsClassTestRunner().runTest(actual, expected);
+}
